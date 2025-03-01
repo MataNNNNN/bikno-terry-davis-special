@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <optional>
 #include <string>
@@ -8,6 +10,7 @@ using namespace std;
 class Lexer {
     protected:
         ifstream& file;
+        
     public:
         Lexer(ifstream& file);
 
@@ -35,7 +38,7 @@ class Lexer {
             TokenType type;
             optional<string> value;
 
-            void print();
+            void print() const;
         };
 
         vector<Token> Lex();

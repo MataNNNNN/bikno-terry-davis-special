@@ -10,7 +10,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/main",
-        "args": ["goat.txt"],
+        "args": ["goat.brot"],
         "stopAtEntry": false,
         "cwd": "${fileDirname}",
         "environment": [],

@@ -3,6 +3,8 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <bitset>
+#include <unordered_map>
 
 #include "lexer.h"
 
@@ -10,21 +12,25 @@ using namespace std;
 
 Lexer::Lexer(ifstream& file) : file(file) {}
 
-void Lexer::Token::print() {
-    cout << (int)type << " " << value.value_or("no val") << endl;
+void Lexer::Token::print() const {
+    static const char* names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "int_type", "size_operator", "pointer", "array", "assignment", "into", "open_paren", "close_paren"};
+    cout << names[(int)type] << " " << value.value_or("no val") << endl;
 }
 
-void PushToken(const string& line, vector<Lexer::Token>& tokens, int i, int count, int& last) {
+void PushToken(const string& line, vector<Lexer::Token>& tokens, size_t i, int count, size_t& last) {
+    static const unordered_map<string, Lexer::TokenType> keywords {
+        {"↩️", Lexer::TokenType::RETURN},
+        {"🔢", Lexer::TokenType::INT_TYPE}
+    };
+
     if(i > last) {
         string str = line.substr(last, i - last);
         if(str.size() > 1 && isdigit(str[0]) && str[1] < 0)
             tokens.push_back({Lexer::TokenType::INT_LIT, str});
         else if(str.size() > 1 && str[0] > 0 && str[1] > 0) //TODO: make it goated
             tokens.push_back({Lexer::TokenType::STRING_LIT, str});
-        else if(str == "↩️")
-            tokens.push_back({Lexer::TokenType::RETURN});
-        else if(str == "🔢")
-            tokens.push_back({Lexer::TokenType::INT_TYPE});
+        else if(keywords.find(str) != keywords.end())
+            tokens.push_back({keywords.at(str)});
         else
             tokens.push_back({Lexer::TokenType::IDENTIFIER, str});
     } else
@@ -32,17 +38,27 @@ void PushToken(const string& line, vector<Lexer::Token>& tokens, int i, int coun
     last = i + count;
 }
 
-void PushToken(Lexer::TokenType type, const string& line, vector<Lexer::Token>& tokens, int i, int count, int& last) {
-    PushToken(line, tokens, i, count, last);
-    tokens.push_back({type});
-}
-
 vector<Lexer::Token> Lexer::Lex() {
     vector<Token> tokens {};
     string line;
 
+    static const unordered_map<wchar_t, TokenType> symbols {
+        {'✊', TokenType::SEMICOLON},
+        {'➕', TokenType::ADDITION},
+        {'➖', TokenType::SUBTRACTION},
+        {'✖', TokenType::MULTIPLICATION},
+        {'➗', TokenType::DIVISION},
+        {'💯', TokenType::SIZE_OPERATOR},
+        {'☝', TokenType::POINTER},
+        {'🛄', TokenType::ARRAY},
+        {'👈', TokenType::ASSIGNMENT},
+        {'🤝', TokenType::INTO},
+        {'🫸', TokenType::OPEN_PAREN},
+        {'🫷', TokenType::CLOSE_PAREN}
+    };
+
     while(getline(file, line)) {
-        int last = 0, i = 0;
+        size_t last = 0, i = 0;
         while (i < line.size()) {
             if(line[i] == 0) //remove ts💔💔
                 cerr << "bad bad time should not be here ever!!!!!" << endl;
@@ -50,49 +66,28 @@ vector<Lexer::Token> Lexer::Lex() {
                 PushToken(line, tokens, i++, 1, last);
                 continue;
             }
-
-            int count = 0;
-            if(line[i] >= 0) {
-                // if(line.size() > i + 1 && line[i+1] > 0) { remove ts💔💔
-                //     PushToken(line, tokens, i, 0, last);
-                //     while(line[i] > 0)
-                //         i++;
-                //     tokens.push_back({TokenType::STRING_LIT, line.substr(last, i - last)});
-                //     continue;
-                // }
+            if(line[i] > 0) {
                 i++;
                 continue;
-            } else for(int t = (unsigned char)line[i] >> 4; t > 0; t >>= 1) // else for shel ha goats😎😎😎
-                count = (t & 1) * (count + 1);
+            }
 
-            string ch = line.substr(i, count);
-            if(ch == "💬") { //good for now
+            int count = 0;
+            wchar_t ch = 0;
+            for(int t = (unsigned char)line[i] >> 4; t > 0; t >>= 1)
+                if(t&1)
+                    ch = (ch << 8) | (unsigned char)line[i + count++];
+                else {
+                    count = 0;
+                    ch = 0;
+                }
+                
+            if(ch == '💬') { //good for now
                 last = line.size();
                 break;
-            } else if(ch == "✊")//TODO: ☹️☹️☹️
-                PushToken(TokenType::SEMICOLON, line, tokens, i, count, last);
-            else if(ch == "➕")
-                PushToken(TokenType::ADDITION, line, tokens, i, count, last);
-            else if(ch == "➖")
-                PushToken(TokenType::SUBTRACTION, line, tokens, i, count, last);
-            else if(ch == "✖️")
-                PushToken(TokenType::MULTIPLICATION, line, tokens, i, count, last);
-            else if(ch == "➗")
-                PushToken(TokenType::DIVISION, line, tokens, i, count, last);
-            else if(ch == "💯")
-                PushToken(TokenType::SIZE_OPERATOR, line, tokens, i, count, last);
-            else if(ch == "☝")
-                PushToken(TokenType::POINTER, line, tokens, i, count, last);
-            else if(ch == "🛄") //TODO: לחשוב על זה יותר
-                PushToken(TokenType::ARRAY, line, tokens, i, count, last);
-            else if(ch == "👈")
-                PushToken(TokenType::ASSIGNMENT, line, tokens, i, count, last);
-            else if(ch == "🤝")
-                PushToken(TokenType::INTO, line, tokens, i, count, last);
-            else if(ch == "🫸")
-                PushToken(TokenType::OPEN_PAREN, line, tokens, i, count, last);
-            else if(ch == "🫷")
-                PushToken(TokenType::CLOSE_PAREN, line, tokens, i, count, last);
+            } else if(symbols.find(ch) != symbols.end()) {
+                PushToken(line, tokens, i, count, last);
+                tokens.push_back({symbols.at(ch)});
+            }
             i += count;
         }
         PushToken(line, tokens, i, 0, last);
