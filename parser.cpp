@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <stack>
 
 #include "parser.h"
 #include "lexer.h"
@@ -23,13 +24,16 @@ namespace Parser {
 //         }
 // };
 
-Constant::Constant(int value) : value(value) {}
-string Constant::generate() {
+template <typename M> Constant<M>::Constant(M value) : value(value) {}
+template <typename M> string Constant<M>::generate() {
     return "";
 }
-string Constant::reg() {
-    return to_string(value);
+template <typename M> string Constant<M>::reg() {
+    return "no no yet";
 }
+// string Constant::reg() {
+//     return to_string(value);
+// }
 
 Return::Return(Value<int>* code) : code(code) {}
 Return::~Return() {
@@ -51,6 +55,13 @@ string Return::generate() {
 //         }
 // }
 
+template <typename L, typename R, typename M> Operator<L, R, M>::Operator(Value<L>* left, Value<R>* right) : left(left), right(right) {}
+template <typename L, typename R, typename M> Operator<L, R, M>::Operator(L left, R right) : left(new Constant(left)), right(new Constant(right)) {}
+template <typename L, typename R, typename M> Operator<L, R, M>::~Operator() {
+    delete left;
+    delete right;
+}
+
 Parser::Parser(const vector<Lexer::Token>& tokens) : tokens(tokens) {}
 
 int ParseInt(Lexer::Token token) {
@@ -64,6 +75,10 @@ int ParseInt(Lexer::Token token) {
     for(size_t i = 0; i < token.value.value().size(); i += 7)
         r = r * 10 + (token.value.value()[i] - '0');
     return r;
+}
+
+Value<int>* ParseMath(const vector<Lexer::Token>& tokens, size_t& i) {
+    stack<Operator*> operators();
 }
 
 vector<Instruction*> Parser::Parse() {
