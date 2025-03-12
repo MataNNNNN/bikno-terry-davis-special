@@ -42,7 +42,7 @@ vector<Lexer::Token> Lexer::Lex() {
     vector<Token> tokens {};
     string line;
 
-    static const unordered_map<wchar_t, TokenType> symbols {
+    static const unordered_map<int, TokenType> symbols {
         {'✊', TokenType::SEMICOLON},
         {'➕', TokenType::ADDITION},
         {'➖', TokenType::SUBTRACTION},
@@ -72,7 +72,7 @@ vector<Lexer::Token> Lexer::Lex() {
             }
 
             int count = 0;
-            wchar_t ch = 0;
+            int ch = 0;
             for(int t = (unsigned char)line[i] >> 4; t > 0; t >>= 1)
                 if(t&1)
                     ch = (ch << 8) | (unsigned char)line[i + count++];

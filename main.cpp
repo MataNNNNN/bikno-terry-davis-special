@@ -31,13 +31,11 @@ int main(int argc, char* argv[]) {
 
     cout << endl << endl;
 
-    //TODO: ast time😎😎😎
     Parser::Parser parser(tokens);
     Wrapper wrapper {parser.Parse()};
     
-    for (Parser::Instruction* instruction : wrapper.data) {
-        cout << instruction->generate() << endl;
-    }
-    cout << "bye bye" << endl;
+    for(int i = 0; i < wrapper.data.size(); i++)
+        cout << i << wrapper.data[i]->generate() << endl;
+    cout << wrapper.data.size() << endl;
     return 0;
 }

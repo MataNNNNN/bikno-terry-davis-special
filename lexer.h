@@ -24,14 +24,14 @@ class Lexer {
             SUBTRACTION,
             MULTIPLICATION,
             DIVISION,
+            OPEN_PAREN,
+            CLOSE_PAREN,
             INT_TYPE,
             SIZE_OPERATOR,
             POINTER,
             ARRAY,
             ASSIGNMENT,
             INTO,
-            OPEN_PAREN,
-            CLOSE_PAREN
         };
 
         struct Token {
@@ -39,6 +39,9 @@ class Lexer {
             optional<string> value;
 
             void print() const;
+            inline operator int() const {
+                return (int)type;
+            }
         };
 
         vector<Token> Lex();

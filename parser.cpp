@@ -1,7 +1,6 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <stack>
 
 #include "parser.h"
 #include "lexer.h"
@@ -9,27 +8,12 @@
 using namespace std;
 
 namespace Parser {
-
-// template <typename T = int> class Constant : public Value<T> {
-//     public:
-//         T value;
-//         Constant(T value, Instruction* next = nullptr): value(value), Instruction(next) {}
-
-//         string generate() {
-//             return "";
-//         }
-
-//         string reg() {
-//             return ;
-//         }
-// };
-
 template <typename M> Constant<M>::Constant(M value) : value(value) {}
 template <typename M> string Constant<M>::generate() {
-    return "";
+    return to_string((int)value);
 }
 template <typename M> string Constant<M>::reg() {
-    return "no no yet";
+    return to_string((int)value);
 }
 // string Constant::reg() {
 //     return to_string(value);
@@ -44,29 +28,58 @@ string Return::generate() {
     return code->generate() + "mov rax, 60\nmov rdi, " + code->reg() + "\nsyscall\n";
 }
 
-// class Addition : public Value<int> {
-//     public:
-//         Value<int>* left;
-//         Value<int>* right;
-//         Addition(Value<int>* left, Value<int>* right): left(left), right(right) {}
-
-//         string getVal() {
-//             return left->generate() + " + " + right->generate(); TODO: ahjhhhhhhhhhhhhh
-//         }
-// }
-
-template <typename L, typename R, typename M> Operator<L, R, M>::Operator(Value<L>* left, Value<R>* right) : left(left), right(right) {}
-template <typename L, typename R, typename M> Operator<L, R, M>::Operator(L left, R right) : left(new Constant(left)), right(new Constant(right)) {}
-template <typename L, typename R, typename M> Operator<L, R, M>::~Operator() {
+Operator::Operator(Value<int>* left, Value<int>* right) : left(left), right(right) {}
+Operator::Operator(int left, int right) : left(new Constant(left)), right(new Constant(right)) {}
+Operator::~Operator() {
     delete left;
     delete right;
 }
 
+Addition::Addition(Value<int>*left, Value<int>* right) : Operator(left, right) {}
+Addition::Addition(int left, int right) : Operator(left, right) {}
+
+string Addition::generate() {
+    return "+\n" + left->generate() + " " + right->generate();
+}
+string Addition::reg() {
+    return "no no yet";
+}
+
+Subtraction::Subtraction(Value<int>*left, Value<int>* right) : Operator(left, right) {}
+Subtraction::Subtraction(int left, int right) : Operator(left, right) {}
+
+string Subtraction::generate() {
+    return "-\n" + left->generate() + " " + right->generate();
+}
+string Subtraction::reg() {
+    return "no no yet";
+}
+
+Multiplication::Multiplication(Value<int>*left, Value<int>* right) : Operator(left, right) {}
+Multiplication::Multiplication(int left, int right) : Operator(left, right) {}
+
+string Multiplication::generate() {
+    return "*\n" + left->generate() + " " + right->generate();
+}
+string Multiplication::reg() {
+    return "no no yet";
+}
+
+Division::Division(Value<int>*left, Value<int>* right) : Operator(left, right) {}
+Division::Division(int left, int right) : Operator(left, right) {}
+
+string Division::generate() {
+    return "/\n" + left->generate() + " " + right->generate();;
+}
+string Division::reg() {
+    return "no no yet";
+}
+
 Parser::Parser(const vector<Lexer::Token>& tokens) : tokens(tokens) {}
 
-int ParseInt(Lexer::Token token) {
+int ParseInt(const Lexer::Token& token) {
     if(token.type != Lexer::TokenType::INT_LIT || !token.value.has_value()) {
-        cerr << "what are you doing" << endl;
+        cerr << "not an int big dog" << endl;
         exit(1);
         return -1;
     }
@@ -77,8 +90,38 @@ int ParseInt(Lexer::Token token) {
     return r;
 }
 
-Value<int>* ParseMath(const vector<Lexer::Token>& tokens, size_t& i) {
-    stack<Operator*> operators();
+Value<int>* parseExpression(const vector<Lexer::Token>& tokens, size_t& i);
+
+Value<int>* parseFactor(const vector<Lexer::Token>& tokens, size_t& i) {
+    if(tokens[i].type == Lexer::TokenType::INT_LIT)
+        return new Constant(ParseInt(tokens[i++]));
+    
+    if(tokens[i].type == Lexer::TokenType::OPEN_PAREN) {
+        Value<int>* r = parseExpression(tokens, ++i);
+        i++;
+        return r;
+    }
+    cerr << (int)tokens[i].type << endl;
+    exit(1);
+    return nullptr;
+}
+
+Value<int>* parseTerm(const vector<Lexer::Token>& tokens, size_t& i) {
+    Value<int>* node = parseFactor(tokens, i);
+
+    while(tokens[i].type == Lexer::TokenType::MULTIPLICATION || tokens[i].type == Lexer::TokenType::DIVISION)
+        node = Lexer::TokenType::MULTIPLICATION == tokens[i].type ? (Operator*)new Multiplication(node, parseFactor(tokens, ++i)) : (Operator*)new Division(node, parseFactor(tokens, ++i));
+    
+    return node;
+}
+
+Value<int>* parseExpression(const vector<Lexer::Token>& tokens, size_t& i) {
+    Value<int>* node = parseTerm(tokens, i);
+    
+    while(tokens[i].type == Lexer::TokenType::ADDITION || tokens[i].type == Lexer::TokenType::SUBTRACTION)
+        node = Lexer::TokenType::ADDITION == tokens[i].type ? (Operator*)new Addition(node, parseTerm(tokens, ++i)) : (Operator*)new Subtraction(node, parseTerm(tokens, ++i));
+
+    return node;
 }
 
 vector<Instruction*> Parser::Parse() {
@@ -86,7 +129,11 @@ vector<Instruction*> Parser::Parse() {
 
     for(size_t i = 0; i < tokens.size(); i++) {
         if(tokens[i].type == Lexer::TokenType::RETURN) {
-            instructions.push_back(new Return(new Constant(ParseInt(tokens[i + 1]))));
+            instructions.push_back(new Return(parseExpression(tokens, ++i))); // make it type type
+        } else if(tokens[i].type == Lexer::TokenType::INT_TYPE) {
+            i += 2;
+            int size = ParseInt(tokens[i]);
+            
         }
     }
 
