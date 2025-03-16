@@ -6,13 +6,6 @@
 
 using namespace std;
 
-// enum class Precedence : unsigned char { maybe
-//     ADDITION,
-//     SUBTRACTION,
-//     MULTIPLICATION,
-//     DIVISION,
-// };
-
 // template <typename R, typename ...Args> class Function {
 //     public:
 //         string name;
@@ -32,68 +25,45 @@ class Instruction {
         virtual string generate() = 0;
 };
 
-template <typename T> class Value : public Instruction { //TODO: retink a value is not an instruction but whatever
+class Value : public Instruction { //TODO: retink a value is not an instruction but whatever
     public:
     
         virtual string reg() = 0;
         // Value(Instruction* next = nullptr): Instruction(next) {}
 };
 
-template <typename M> class Constant : public Value<M> {
+class Constant : public Value {
     public:
-        M value; //TODO: be goated
-        // Constant(int value, Instruction* next = nullptr) {}
-        Constant(M value);
+        string value;
 
+        Constant(string value);
+        Constant(int t); //TODO
         string generate() override;
         string reg() override;
 };
 
 class Return : public Instruction {
     public:
-        Value<int>* code;
-        Return(Value<int>* code);
+        Value* code;
+        Return(Value* code);
         ~Return();
 
         string generate() override;
 };
 
-// template <typename L, typename R, typename M> class Operator : public Value<M> {
-//     public:
-//         Value<L>* left;
-//         Value<R>* right;
-
-//         Operator(Value<L>* left, Value<R>* right);
-//         Operator(L left, R right);
-//         ~Operator();
-// };
-
-enum class OperatorType : unsigned char {
-    ADDITION,
-    SUBTRACTION,
-    MULTIPLICATION,
-    DIVISION,
-    OPEN_PAREN,
-    CLOSE_PAREN
-};
-
-class Operator : public Value<int> {
+class Operator : public Value {
     public:
-        // const int precedence;
-        // const OperatorType type;
-        Value<int>* left;
-        Value<int>* right;
-
-        // Operator(int precedence, OperatorType type, Value<int>* left, Value<int>* right);
-        // Operator(int precedence, OperatorType type, int left, int right);
-        Operator(Value<int>* left, Value<int>* right);
+        Value* left;
+        Value* right;
+        
+        Operator(Value* left, Value* right);
         Operator(int left, int right);
         ~Operator();
 };
 
 class Addition : public Operator {
     public:
-        Addition(Value<int>* left, Value<int>* right);
+        Addition(Value* left, Value* right);
         Addition(int left, int right);
 
         string generate() override;
@@ -102,7 +72,7 @@ class Addition : public Operator {
 
 class Subtraction : public Operator {
     public:
-        Subtraction(Value<int>* left, Value<int>* right);
+        Subtraction(Value* left, Value* right);
         Subtraction(int left, int right);
 
         string generate() override;
@@ -111,7 +81,7 @@ class Subtraction : public Operator {
 
 class Multiplication : public Operator {
     public:
-        Multiplication(Value<int>* left, Value<int>* right);
+        Multiplication(Value* left, Value* right);
         Multiplication(int left, int right);
 
         string generate() override;
@@ -120,7 +90,7 @@ class Multiplication : public Operator {
 
 class Division : public Operator {
     public:
-        Division(Value<int>* left, Value<int>* right);
+        Division(Value* left, Value* right);
         Division(int left, int right);
 
         string generate() override;
