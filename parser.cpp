@@ -11,9 +11,6 @@ using namespace std;
 namespace Parser {
 Constant::Constant(string value): value(value) {}
 Constant::Constant(int t) : value(to_string(t)) {}
-string Constant::generate() {
-    return "";
-}
 string Constant::reg() {
     return value;
 }
@@ -24,21 +21,22 @@ Return::~Return() {
 }
 
 string Return::generate() {
-    return code->generate() + "mov rax, 60\nmov rdi, " + code->reg() + "\nsyscall\n";
+    return code->reg();
 }
 
-Operator::Operator(Value* left, Value* right) : left(left), right(right) {}
-Operator::Operator(int left, int right) : left(new Constant(left)), right(new Constant(right)) {}
+Operator::Operator(Value* left, Value* right, Value* store = nullptr) : left(left), right(right), store(store) {}
+Operator::Operator(int left, int right, Value* store = nullptr) : left(new Constant(left)), right(new Constant(right)), store(store) {}
 Operator::~Operator() {
     delete left;
     delete right;
+    delete store;
 }
 
-Addition::Addition(Value* left, Value* right) : Operator(left, right) {}
-Addition::Addition(int left, int right) : Operator(left, right) {}
+Addition::Addition(Value* left, Value* right, Value* store = nullptr) : Operator(left, right, store) {}
+Addition::Addition(int left, int right, Value* store = nullptr) : Operator(left, right, store) {}
 
 string Addition::generate() {
-    return left->generate() + right->generate() + "\nadd " + left->reg() + ", " + right->reg();
+    return "\nadd " + left->reg() + ", " + right->reg();
 }
 string Addition::reg() {
     return "no no yet";
@@ -68,7 +66,7 @@ Division::Division(Value*left, Value* right) : Operator(left, right) {}
 Division::Division(int left, int right) : Operator(left, right) {}
 
 string Division::generate() {
-    return "/\n" + left->generate() + " " + right->generate();;
+    return "/\n" + left->generate() + " " + right->generate();
 }
 string Division::reg() {
     return "no no yet";

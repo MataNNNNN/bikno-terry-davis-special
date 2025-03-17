@@ -22,13 +22,16 @@ class Instruction {
         //     delete next;
         // }
 
-        virtual string generate() = 0;
+        virtual string generate() const = 0;
 };
 
-class Value : public Instruction { //TODO: retink a value is not an instruction but whatever
+class Value {
     public:
-    
-        virtual string reg() = 0;
+        string reg;
+
+        virtual string reg() const { //TODO dont be stupid
+            return reg;
+        }
         // Value(Instruction* next = nullptr): Instruction(next) {}
 };
 
@@ -38,8 +41,7 @@ class Constant : public Value {
 
         Constant(string value);
         Constant(int t); //TODO
-        string generate() override;
-        string reg() override;
+        string reg() const override;
 };
 
 class Return : public Instruction {
@@ -48,53 +50,54 @@ class Return : public Instruction {
         Return(Value* code);
         ~Return();
 
-        string generate() override;
+        string generate() const override;
 };
 
-class Operator : public Value {
+class Operator : public Value, public Instruction {
     public:
         Value* left;
         Value* right;
+        Value* store;
         
-        Operator(Value* left, Value* right);
-        Operator(int left, int right);
+        Operator(Value* left, Value* right, Value* store = nullptr);
+        Operator(int left, int right, Value* store = nullptr);
         ~Operator();
 };
 
 class Addition : public Operator {
     public:
-        Addition(Value* left, Value* right);
-        Addition(int left, int right);
+        Addition(Value* left, Value* right, Value* store = nullptr);
+        Addition(int left, int right, Value* store = nullptr);
 
-        string generate() override;
-        string reg() override;
+        string generate() const override;
+        string reg() const override;
 };
 
 class Subtraction : public Operator {
     public:
-        Subtraction(Value* left, Value* right);
-        Subtraction(int left, int right);
+        Subtraction(Value* left, Value* right, Value* store = nullptr);
+        Subtraction(int left, int right, Value* store = nullptr);
 
-        string generate() override;
-        string reg() override;
+        string generate() const override;
+        string reg() const override;
 };
 
 class Multiplication : public Operator {
     public:
-        Multiplication(Value* left, Value* right);
-        Multiplication(int left, int right);
+        Multiplication(Value* left, Value* right, Value* store = nullptr);
+        Multiplication(int left, int right, Value* store = nullptr);
 
-        string generate() override;
-        string reg() override;
+        string generate() const override;
+        string reg() const override;
 };
 
 class Division : public Operator {
     public:
-        Division(Value* left, Value* right);
-        Division(int left, int right);
+        Division(Value* left, Value* right, Value* store = nullptr);
+        Division(int left, int right, Value* store = nullptr);
 
-        string generate() override;
-        string reg() override;
+        string generate() const override;
+        string reg() const override;
 };
 
 class Parser {
