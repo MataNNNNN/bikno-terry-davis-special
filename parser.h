@@ -29,20 +29,19 @@ class Value {
     public:
         string reg;
 
-        virtual string reg() const { //TODO dont be stupid
-            return reg;
-        }
+        Value(string reg);
+        Value(int value);
+
+        virtual string getReg() const; //TODO dont be stupid
         // Value(Instruction* next = nullptr): Instruction(next) {}
 };
 
-class Constant : public Value {
-    public:
-        string value;
-
-        Constant(string value);
-        Constant(int t); //TODO
-        string reg() const override;
-};
+// class Constant : public Value {
+//     public:
+//         Constant(string value);
+//         Constant(int t); //TODO
+//         string reg() const override;
+// };
 
 class Return : public Instruction {
     public:
@@ -55,13 +54,13 @@ class Return : public Instruction {
 
 class Operator : public Value, public Instruction {
     public:
-        Value* left;
-        Value* right;
-        Value* store;
+        Value *left, *right, *store;
         
         Operator(Value* left, Value* right, Value* store = nullptr);
         Operator(int left, int right, Value* store = nullptr);
         ~Operator();
+
+        virtual string generate() const override;
 };
 
 class Addition : public Operator {
@@ -70,7 +69,7 @@ class Addition : public Operator {
         Addition(int left, int right, Value* store = nullptr);
 
         string generate() const override;
-        string reg() const override;
+        string getReg() const override;
 };
 
 class Subtraction : public Operator {
@@ -79,7 +78,7 @@ class Subtraction : public Operator {
         Subtraction(int left, int right, Value* store = nullptr);
 
         string generate() const override;
-        string reg() const override;
+        string getReg() const override;
 };
 
 class Multiplication : public Operator {
@@ -88,7 +87,7 @@ class Multiplication : public Operator {
         Multiplication(int left, int right, Value* store = nullptr);
 
         string generate() const override;
-        string reg() const override;
+        string getReg() const override;
 };
 
 class Division : public Operator {
@@ -97,7 +96,15 @@ class Division : public Operator {
         Division(int left, int right, Value* store = nullptr);
 
         string generate() const override;
-        string reg() const override;
+        string getReg() const override;
+};
+
+class Assignment : public Instruction {
+    public:
+        Value *into, *value;
+        Assignment(Value* into, Value* value);
+
+        string generate() const override;
 };
 
 class Parser {
