@@ -11,8 +11,8 @@ using namespace std;
 struct Wrapper { //????
     vector<Parser::Instruction*> data;
     ~Wrapper() {
-        for (Parser::Instruction* instruction : data)
-            delete instruction;
+        //for (Parser::Instruction* instruction : data)
+            //delete instruction;
     }
 };
 

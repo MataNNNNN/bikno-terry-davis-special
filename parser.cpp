@@ -27,11 +27,14 @@ Return::~Return() {
 }
 
 string Return::generate() const {
-    return code->getReg();
+    string r = "";
+    if(dynamic_cast<Instruction*>(code) != nullptr)
+        r = ((Instruction*)code)->generate();
+    return r + "\nmov   rax, 60\nmov    rdi, " + code->getReg() + "\nsyscall";
 }
 
-Operator::Operator(Value* left, Value* right, Value* store = nullptr) : left(left), right(right), store(store), Value("") {} // TODO: idk
-Operator::Operator(int left, int right, Value* store = nullptr) : left(new Value(left)), right(new Value(right)), store(store), Value("") {}
+Operator::Operator(Value* left, Value* right, Value* store) : left(left), right(right), store(store), Value("") {} // TODO: idk
+Operator::Operator(int left, int right, Value* store) : left(new Value(left)), right(new Value(right)), store(store), Value("") {}
 Operator::~Operator() {
     delete left;
     delete right;
@@ -49,49 +52,53 @@ string Operator::generate() const {
     return r;
 }
 
-Addition::Addition(Value* left, Value* right, Value* store = nullptr): Operator(left, right, store) {}
-Addition::Addition(int left, int right, Value* store = nullptr): Operator(left, right, store) {}
+Addition::Addition(Value* left, Value* right, Value* store): Operator(left, right, store) {}
+Addition::Addition(int left, int right, Value* store): Operator(left, right, store) {}
 
 string Addition::generate() const {
-    return Operator::generate() + "\nADD " + left->getReg() + ", " + right->getReg() + ", " + store->getReg();
+    return Operator::generate() + "\nadd    " + left->getReg() + ", " + right->getReg();// + ", " + store->getReg();
 }
 string Addition::getReg() const {
     return "rax";
 }
 
-Subtraction::Subtraction(Value*left, Value* right, Value* store = nullptr): Operator(left, right, store) {}
-Subtraction::Subtraction(int left, int right, Value* store = nullptr): Operator(left, right, store) {}
+Subtraction::Subtraction(Value*left, Value* right, Value* store): Operator(left, right, store) {}
+Subtraction::Subtraction(int left, int right, Value* store): Operator(left, right, store) {}
 
 string Subtraction::generate() const {
-    return Operator::generate() + "\nsub " + left->getReg() + ", " + right->getReg() + ", " + store->getReg();
+    return Operator::generate() + "\nsub    " + left->getReg() + ", " + right->getReg();// + ", " + store->getReg();
 }
 string Subtraction::getReg() const {
     return "rax";
 }
 
-Multiplication::Multiplication(Value*left, Value* right, Value* store = nullptr): Operator(left, right, store) {}
-Multiplication::Multiplication(int left, int right, Value* store = nullptr) : Operator(left, right, store) {}
+Multiplication::Multiplication(Value*left, Value* right, Value* store): Operator(left, right, store) {}
+Multiplication::Multiplication(int left, int right, Value* store) : Operator(left, right, store) {}
 
 string Multiplication::generate() const {
-    return Operator::generate() + "\nimul " + left->getReg() + ", " + right->getReg() + ", " + store->getReg();
+    return Operator::generate() + "\nimul   " + left->getReg() + ", " + right->getReg();// + ", " + store->getReg();
 }
 string Multiplication::getReg() const {
     return "rax";
 }
 
-Division::Division(Value*left, Value* right, Value* store = nullptr) : Operator(left, right, store) {}
-Division::Division(int left, int right, Value* store = nullptr) : Operator(left, right, store) {}
+Division::Division(Value*left, Value* right, Value* store) : Operator(left, right, store) {}
+Division::Division(int left, int right, Value* store) : Operator(left, right, store) {}
 
 string Division::generate() const {
-    return Operator::generate() + "\nidk" + left->getReg() + ", " + right->getReg() + ", " + store->getReg();
+    return Operator::generate() + "\nidk    " + left->getReg() + ", " + right->getReg();// + ", " + store->getReg();
 }
 string Division::getReg() const {
-    return "rax";
+    return "rax2";
 }
 
 Assignment::Assignment(Value* into, Value* value): into(into), value(value) {}
 string Assignment::generate() const {
+    string r = "";
+    if(dynamic_cast<Instruction*>(value) != nullptr)
+        r = ((Instruction*)value)->generate();
 
+    return r + "\nmov   " + into->getReg() + ", " + value->getReg();
 }
 
 Parser::Parser(const vector<Lexer::Token>& tokens) : tokens(tokens) {}
@@ -112,17 +119,17 @@ int ParseInt(const Lexer::Token& token) {
 Value* parseExpression(const vector<Lexer::Token>& tokens, size_t& i);
 
 Value* parseFactor(const vector<Lexer::Token>& tokens, size_t& i) {
-    if(tokens[i].type == Lexer::TokenType::INT_LIT)
-        return new Value(ParseInt(tokens[i++]));
-    else if(tokens[i].type == Lexer::TokenType::IDENTIFIER) {
-        cerr << "unimplemented" << endl;
-        exit(1);
-    }
-    
-    if(tokens[i].type == Lexer::TokenType::OPEN_PAREN) {
-        Value* r = parseExpression(tokens, ++i);
-        i++;
-        return r;
+    switch (tokens[i].type) {
+        case Lexer::TokenType::INT_LIT:
+            return new Value(ParseInt(tokens[i++]));
+        case Lexer::TokenType::IDENTIFIER:
+            cerr << "unimplemented1" << endl;
+            exit(1);
+            return nullptr;
+        case Lexer::TokenType::OPEN_PAREN:
+            Value* r = parseExpression(tokens, ++i);
+            i++;
+            return r;
     }
     cerr << (int)tokens[i].type << endl;
     exit(1);
@@ -165,8 +172,7 @@ vector<Instruction*> Parser::Parse() { //what did i do to my constants
                 instructions.push_back(new Assignment(identifiers[tokens[i-1].value.value()], parseExpression(tokens, ++i)));
                 break;
             default:
-                cerr << "unimplemented" << endl;
-                exit(1);
+                cerr << "unimplemented2" << endl;
                 break;
         }
     }
