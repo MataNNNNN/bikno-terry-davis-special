@@ -33,9 +33,13 @@ int main(int argc, char* argv[]) {
 
     Parser::Parser parser(tokens);
     Wrapper wrapper {parser.Parse()};
-    
-    for(int i = 0; i < wrapper.data.size(); i++)
-        cout << i << wrapper.data[i]->generate() << endl;
+    ofstream out("a.out.s");
+    out << "global _start\nsection .text\n  _start:";
+    for(int i = 0; i < wrapper.data.size(); i++) {
+        string s = wrapper.data[i]->generate();
+        cout << i << s << endl;
+        out << s << "   ";
+    }
     cout << wrapper.data.size() << endl;
     return 0;
 }
