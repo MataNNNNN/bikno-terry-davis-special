@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <sstream>
 
 #include "parser.h"
 #include "lexer.h"
@@ -28,8 +29,8 @@ Return::~Return() {
 
 string Return::generate() const {
     string r = "";
-    if(dynamic_cast<Instruction*>(code) != nullptr)
-        r = ((Instruction*)code)->generate();
+    if(dynamic_cast<Operator*>(code) != nullptr)
+        r = ((Operator*)code)->generate();
     return r + "\nmov   rax, 60\nmov    rdi, " + code->getReg() + "\nsyscall";
 }
 
@@ -43,11 +44,11 @@ Operator::~Operator() {
 
 string Operator::generate() const {
     string r = "";
-    if(dynamic_cast<Instruction*>(left) != nullptr) {
-        r += ((Instruction*)left)->generate();
+    if(dynamic_cast<Operator*>(left) != nullptr) {
+        r += ((Operator*)left)->generate();
     }
-    if(dynamic_cast<Instruction*>(right) != nullptr) {
-        r += ((Instruction*)right)->generate();
+    if(dynamic_cast<Operator*>(right) != nullptr) {
+        r += ((Operator*)right)->generate();
     }
     return r;
 }
@@ -56,9 +57,17 @@ Addition::Addition(Value* left, Value* right, Value* store): Operator(left, righ
 Addition::Addition(int left, int right, Value* store): Operator(left, right, store) {}
 
 string Addition::generate() const {
-    return Operator::generate() + "\nadd    " + left->getReg() + ", " + right->getReg();// + ", " + store->getReg();
+    ostringstream oss(Operator::generate());
+    oss << "\nadd   ";
+    if(store)
+        oss << store->getReg() << ", ";
+    oss << left->getReg() << ", " << right->getReg() << "\n";
+    return oss.str();
 }
+
 string Addition::getReg() const {
+    if(store)
+        return store->getReg();
     return "rax";
 }
 
@@ -66,7 +75,12 @@ Subtraction::Subtraction(Value*left, Value* right, Value* store): Operator(left,
 Subtraction::Subtraction(int left, int right, Value* store): Operator(left, right, store) {}
 
 string Subtraction::generate() const {
-    return Operator::generate() + "\nsub    " + left->getReg() + ", " + right->getReg();// + ", " + store->getReg();
+    ostringstream oss(Operator::generate());
+    oss << "\nsub   ";
+    if(store)
+        oss << store->getReg() << ", ";
+    oss << left->getReg() << ", " << right->getReg() << "\n";
+    return oss.str();
 }
 string Subtraction::getReg() const {
     return "rax";
@@ -76,7 +90,12 @@ Multiplication::Multiplication(Value*left, Value* right, Value* store): Operator
 Multiplication::Multiplication(int left, int right, Value* store) : Operator(left, right, store) {}
 
 string Multiplication::generate() const {
-    return Operator::generate() + "\nimul   " + left->getReg() + ", " + right->getReg();// + ", " + store->getReg();
+    ostringstream oss(Operator::generate());
+    oss << "\nimul   ";
+    if(store)
+        oss << store->getReg() << ", ";
+    oss << left->getReg() << ", " << right->getReg() << "\n";
+    return oss.str();
 }
 string Multiplication::getReg() const {
     return "rax";
@@ -86,7 +105,12 @@ Division::Division(Value*left, Value* right, Value* store) : Operator(left, righ
 Division::Division(int left, int right, Value* store) : Operator(left, right, store) {}
 
 string Division::generate() const {
-    return Operator::generate() + "\nidk    " + left->getReg() + ", " + right->getReg();// + ", " + store->getReg();
+    ostringstream oss(Operator::generate());
+    oss << "\nidk   ";
+    if(store)
+        oss << store->getReg() << ", ";
+    oss << left->getReg() << ", " << right->getReg() << "\n";
+    return oss.str();
 }
 string Division::getReg() const {
     return "rax2";
@@ -95,8 +119,8 @@ string Division::getReg() const {
 Assignment::Assignment(Value* into, Value* value): into(into), value(value) {}
 string Assignment::generate() const {
     string r = "";
-    if(dynamic_cast<Instruction*>(value) != nullptr)
-        r = ((Instruction*)value)->generate();
+    if(dynamic_cast<Operator*>(value) != nullptr)
+        r = ((Operator*)value)->generate();
 
     return r + "\nmov   " + into->getReg() + ", " + value->getReg();
 }

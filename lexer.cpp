@@ -13,7 +13,7 @@ using namespace std;
 Lexer::Lexer(ifstream& file) : file(file) {}
 
 void Lexer::Token::print() const {
-    static const char* names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "int_type", "size_operator", "pointer", "array", "assignment", "into", "open_paren", "close_paren"};
+    static const char* names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "open_paren", "close_paren", "int_type", "size_operator", "pointer", "array", "assignment", "into"};
     cout << names[(int)type] << " " << value.value_or("no val") << endl;
 }
 
