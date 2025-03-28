@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <sstream>
-#include <queue>
+#include <stack>
 
 #include "parser.h"
 #include "lexer.h"
@@ -120,8 +120,31 @@ string Assignment::generate() const {
 
     return r + "\nmov   " + into->getReg() + ", " + value->getReg();
 }
+Assignment::~Assignment() {
+    delete into;
+    delete value;
+}
 
 Parser::Parser(const vector<Lexer::Token>& tokens) : tokens(tokens) {}
+
+class Register : public Value {
+    public:
+        static stack<string> registers;
+        static void Init() {
+            registers.push("rax");
+            registers.push("r9");
+            registers.push("r8");
+            registers.push("rsi");
+        }
+
+        Register() : Value(registers.top()) {
+            registers.pop();
+        }
+        ~Register() {
+            registers.push(getReg());
+        }
+};
+stack<string> Register::registers; //TODO: maybe remove
 
 int ParseInt(const Lexer::Token& token) {
     if(token.type != Lexer::TokenType::INT_LIT || !token.value.has_value()) {
@@ -160,7 +183,7 @@ Value* parseTerm(const vector<Lexer::Token>& tokens, size_t& i) {
     Value* node = parseFactor(tokens, i);
 
     while(tokens[i].type == Lexer::TokenType::MULTIPLICATION || tokens[i].type == Lexer::TokenType::DIVISION)
-        node = Lexer::TokenType::MULTIPLICATION == tokens[i].type ? (Operator*)new Multiplication(node, parseFactor(tokens, ++i), new Value("rax")) : (Operator*)new Division(node, parseFactor(tokens, ++i), new Value("rax"));
+        node = Lexer::TokenType::MULTIPLICATION == tokens[i].type ? (Operator*)new Multiplication(node, parseFactor(tokens, ++i), new Register()) : (Operator*)new Division(node, parseFactor(tokens, ++i), new Register());
     
     return node;
 }
@@ -169,12 +192,13 @@ Value* parseExpression(const vector<Lexer::Token>& tokens, size_t& i) {
     Value* node = parseTerm(tokens, i);
     
     while(tokens[i].type == Lexer::TokenType::ADDITION || tokens[i].type == Lexer::TokenType::SUBTRACTION)
-        node = Lexer::TokenType::ADDITION == tokens[i].type ? (Value*)new Addition(node, parseTerm(tokens, ++i), new Value("rax")) : (Value*)new Subtraction(node, parseTerm(tokens, ++i), new Value("rax"));
+    node = Lexer::TokenType::ADDITION == tokens[i].type ? (Value*)new Addition(node, parseTerm(tokens, ++i), new Register()) : (Value*)new Subtraction(node, parseTerm(tokens, ++i), new Register());
 
     return node;
 }
 
 vector<Instruction*> Parser::Parse() { //what did i do to my constants
+    Register::Init();
     vector<Instruction*> instructions {};
     unordered_map<string, Value*> identifiers;
     int stack = 0;

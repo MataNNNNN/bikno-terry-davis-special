@@ -38,7 +38,8 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < wrapper.data.size(); i++) {
         string s = wrapper.data[i]->generate();
         cout << i << s << endl;
-        out << s << "   ";
+        out << s;
+        delete wrapper.data[i];
     }
     cout << wrapper.data.size() << endl;
     return 0;

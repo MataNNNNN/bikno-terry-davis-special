@@ -21,7 +21,7 @@ class Instruction {
         // ~Instruction() {
         //     delete next;
         // }
-
+        virtual ~Instruction() = default;
         virtual string generate() const = 0;
 };
 
@@ -31,7 +31,7 @@ class Value {
 
         Value(string reg);
         Value(int value);
-
+        virtual ~Value() = default;
         virtual string getReg() const; //TODO dont be stupid
         // Value(Instruction* next = nullptr): Instruction(next) {}
 };
@@ -103,6 +103,7 @@ class Assignment : public Instruction {
     public:
         Value *into, *value;
         Assignment(Value* into, Value* value);
+        ~Assignment();
 
         string generate() const override;
 };
