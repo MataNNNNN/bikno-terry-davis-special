@@ -13,6 +13,9 @@ using namespace std;
 namespace Parser {
 Value::Value(string reg): reg(reg) {}
 Value::Value(int value): reg(to_string(value)) {}
+void Value::Free() {
+    delete this;
+}
 string Value::getReg() const {
     return reg;
 }
@@ -24,20 +27,17 @@ string Value::getReg() const {
 // }
 
 Return::Return(Value* code) : code(code) {}
-Return::~Return() {
-    delete code;
-}
 
 string Return::generate() const {
-    return Assignment(new Value("rdi"), code).generate() + "\nmov    rax, 60\nsyscall";
+    return Assignment(&Register::rdi, code).generate() + "\nmov    rax, 60\nsyscall";
 }
 
 Operator::Operator(Value* left, Value* right, Value* store) : left(left), right(right), store(store), Value("") {} // TODO: idk
 Operator::Operator(int left, int right, Value* store) : left(new Value(left)), right(new Value(right)), store(store), Value("") {}
 Operator::~Operator() {
-    delete left;
-    delete right;
-    delete store;
+    left->Free();
+    right->Free();
+    // delete store; i dont tink
 }
 
 string Operator::generate() const {
@@ -59,7 +59,7 @@ string Addition::generate() const {
     oss << Operator::generate() << "\nadd   ";
     if(store)
         oss << store->getReg() << ", ";
-    oss << left->getReg() << ", " << right->getReg() << "\n";
+    oss << left->getReg() << ", " << right->getReg();
     return oss.str();
 }
 
@@ -75,7 +75,7 @@ string Subtraction::generate() const {
     oss << Operator::generate() << "\nsub   ";
     if(store)
         oss << store->getReg() << ", ";
-    oss << left->getReg() << ", " << right->getReg() << "\n";
+    oss << left->getReg() << ", " << right->getReg();
     return oss.str();
 }
 string Subtraction::getReg() const {
@@ -90,26 +90,42 @@ string Multiplication::generate() const {
     oss << Operator::generate() << "\nimul   ";
     if(store)
         oss << store->getReg() << ", ";
-    oss << left->getReg() << ", " << right->getReg() << "\n";
+    oss << left->getReg() << ", " << right->getReg();
     return oss.str();
 }
 string Multiplication::getReg() const {
     return store->getReg();
 }
 
-Division::Division(Value*left, Value* right, Value* store) : Operator(left, right, store) {}
+Division::Division(Value* left, Value* right, Value* store) : Operator(left, right, store) {}
 Division::Division(int left, int right, Value* store) : Operator(left, right, store) {}
 
-string Division::generate() const {
+string Division::generate() const { //division works differently
     ostringstream oss;
-    oss << Operator::generate() << "\nidk   ";
-    if(store)
-        oss << store->getReg() << ", ";
-    oss << left->getReg() << ", " << right->getReg() << "\n";
+    if(dynamic_cast<Operator*>(right) != nullptr)
+        oss << ((Operator*)right)->generate();
+    oss << Assignment(&Register::rax, left).generate() << "\ndiv    " << right->getReg();
+    // if(store)
+    //     oss << Assignment(store, new Value("rax")).generate();
     return oss.str();
 }
 string Division::getReg() const {
-    return store->getReg();
+    return Register::rax.getReg();
+}
+
+Reminder::Reminder(Value* left, Value* right, Value* store): Operator(left, right, store) {}
+
+string Reminder::generate() const {
+    ostringstream oss;
+    if(dynamic_cast<Operator*>(right) != nullptr)
+        oss << ((Operator*)right)->generate();
+    oss << Assignment(&Register::rax, left).generate() << "\ndiv    " << right->getReg();
+    // if(store)
+    //     oss << Assignment(store, new Value("rdx")).generate();
+    return oss.str();
+}
+string Reminder::getReg() const {
+    return Register::rdi.getReg();
 }
 
 Assignment::Assignment(Value* into, Value* value): into(into), value(value) {}
@@ -121,30 +137,31 @@ string Assignment::generate() const {
     return r + "\nmov   " + into->getReg() + ", " + value->getReg();
 }
 Assignment::~Assignment() {
-    delete into;
-    delete value;
+    value->Free();
 }
 
 Parser::Parser(const vector<Lexer::Token>& tokens) : tokens(tokens) {}
 
-class Register : public Value {
-    public:
-        static stack<string> registers;
-        static void Init() {
-            registers.push("rax");
-            registers.push("r9");
-            registers.push("r8");
-            registers.push("rsi");
-        }
+void Register::Free() {
+    registers.push(this);
+}
+Value* Register::Get() {
+    Value* val = registers.top();
+    registers.pop();
+    return val;
+}
+void Register::Init() {
+    registers.push(&rbx);
+    registers.push(&r10);
+    registers.push(&r11);
+    registers.push(&r12);
+    registers.push(&r13);
+    registers.push(&r14);
+    registers.push(&r15);
+}
 
-        Register() : Value(registers.top()) {
-            registers.pop();
-        }
-        ~Register() {
-            registers.push(getReg());
-        }
-};
-stack<string> Register::registers; //TODO: maybe remove
+stack<Value*> Register::registers; //TODO: maybe remove
+Value Register::rbp("rbp"), Register::rax("rax"), Register::rdi("rdi"), Register::rbx("rbx"), Register::r10("r10"), Register::r11("r11"), Register::r12("12"), Register::r13("r13"), Register::r14("r14"), Register::r15("r15");
 
 int ParseInt(const Lexer::Token& token) {
     if(token.type != Lexer::TokenType::INT_LIT || !token.value.has_value()) {
@@ -183,7 +200,7 @@ Value* parseTerm(const vector<Lexer::Token>& tokens, size_t& i) {
     Value* node = parseFactor(tokens, i);
 
     while(tokens[i].type == Lexer::TokenType::MULTIPLICATION || tokens[i].type == Lexer::TokenType::DIVISION)
-        node = Lexer::TokenType::MULTIPLICATION == tokens[i].type ? (Operator*)new Multiplication(node, parseFactor(tokens, ++i), new Register()) : (Operator*)new Division(node, parseFactor(tokens, ++i), new Register());
+        node = Lexer::TokenType::MULTIPLICATION == tokens[i].type ? (Operator*)new Multiplication(node, parseFactor(tokens, ++i), Register::Get()) : (Operator*)new Division(node, parseFactor(tokens, ++i), Register::Get());
     
     return node;
 }
@@ -192,7 +209,7 @@ Value* parseExpression(const vector<Lexer::Token>& tokens, size_t& i) {
     Value* node = parseTerm(tokens, i);
     
     while(tokens[i].type == Lexer::TokenType::ADDITION || tokens[i].type == Lexer::TokenType::SUBTRACTION)
-    node = Lexer::TokenType::ADDITION == tokens[i].type ? (Value*)new Addition(node, parseTerm(tokens, ++i), new Register()) : (Value*)new Subtraction(node, parseTerm(tokens, ++i), new Register());
+    node = Lexer::TokenType::ADDITION == tokens[i].type ? (Value*)new Addition(node, parseTerm(tokens, ++i), Register::Get()) : (Value*)new Subtraction(node, parseTerm(tokens, ++i), Register::Get());
 
     return node;
 }
@@ -221,7 +238,7 @@ vector<Instruction*> Parser::Parse() { //what did i do to my constants
         }
     }
     if(stack)
-        instructions.insert(instructions.begin(), new Subtraction(new Value("rbp"), new Value(stack)));
+        instructions.insert(instructions.begin(), new Subtraction(&Register::rbp, new Value(stack)));
     return instructions;
 }
 }

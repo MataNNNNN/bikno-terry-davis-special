@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
         out << s;
         delete wrapper.data[i];
     }
+    out.close();
     cout << wrapper.data.size() << endl;
     return 0;
 }

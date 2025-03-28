@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <stack>
 
 #include "lexer.h"
 
@@ -31,6 +32,7 @@ class Value {
 
         Value(string reg);
         Value(int value);
+        virtual void Free();
         virtual ~Value() = default;
         virtual string getReg() const; //TODO dont be stupid
         // Value(Instruction* next = nullptr): Instruction(next) {}
@@ -47,7 +49,7 @@ class Return : public Instruction {
     public:
         Value* code;
         Return(Value* code);
-        ~Return();
+        // ~Return() override;
 
         string generate() const override;
 };
@@ -58,7 +60,7 @@ class Operator : public Value, public Instruction {
         
         Operator(Value* left, Value* right, Value* store = nullptr);
         Operator(int left, int right, Value* store = nullptr);
-        ~Operator();
+        ~Operator() override;
 
         virtual string generate() const override;
 };
@@ -99,6 +101,14 @@ class Division : public Operator {
         string getReg() const override;
 };
 
+class Reminder : public Operator {
+    public:
+        Reminder(Value* left, Value* right, Value* store = nullptr);
+
+        string generate() const override;
+        string getReg() const override;
+};
+
 class Assignment : public Instruction {
     public:
         Value *into, *value;
@@ -106,6 +116,16 @@ class Assignment : public Instruction {
         ~Assignment();
 
         string generate() const override;
+};
+
+class Register : public Value {
+    public:
+        static stack<Value*> registers;
+        static Value rbp, rax, rdi, rbx, r10, r11, r12, r13, r14, r15;
+        static void Init();
+        static Value* Get();
+
+        void Free() override;
 };
 
 class Parser {
