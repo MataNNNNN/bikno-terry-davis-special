@@ -1,0 +1,4 @@
+.vscode/
+*.s
+test*
+main

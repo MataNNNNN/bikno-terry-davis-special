@@ -8,21 +8,18 @@
 
 using namespace std;
 
-struct Wrapper { //????
-    vector<Parser::Instruction*> data;
-    ~Wrapper() {
-        //for (Parser::Instruction* instruction : data)
-            //delete instruction;
-    }
-};
-
 int main(int argc, char* argv[]) {
     if(argc != 2) {
-        cerr << "error in the sigma house not 2" << endl << argc << endl;
+        throw runtime_error("error in the sigma house not 2");
         return 1;
     }
 
     ifstream file(argv[1]);
+    if(!file) {
+        throw runtime_error("file not found");
+        return 1;
+    }
+
     Lexer lexer(file);
     vector<Lexer::Token> tokens = lexer.Lex();
     cout << tokens.size() << endl;
@@ -32,16 +29,15 @@ int main(int argc, char* argv[]) {
     cout << endl << endl;
 
     Parser::Parser parser(tokens);
-    Wrapper wrapper {parser.Parse()};
+    vector<unique_ptr<Parser::Instruction>> instruction = parser.Parse();
     ofstream out("a.out.s");
     out << "global _start\nsection .text\n  _start:";
-    for(int i = 0; i < wrapper.data.size(); i++) {
-        string s = wrapper.data[i]->generate();
+    cout << instruction.size() << endl;
+    for(int i = 0; i < instruction.size(); i++) {
+        string s = instruction[i]->generate();
         cout << i << s << endl;
         out << s;
-        delete wrapper.data[i];
     }
-    out.close();
-    cout << wrapper.data.size() << endl;
+    out << "\nmov    rax, 60\nmov    rdi, 0\nsyscall";
     return 0;
 }
