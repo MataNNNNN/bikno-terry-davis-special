@@ -39,5 +39,6 @@ int main(int argc, char* argv[]) {
         out << s;
     }
     out << "\nmov    rax, 60\nmov    rdi, 0\nsyscall";
+    system("nasm -felf64 a.out.s -o a.out.o");
     return 0;
 }

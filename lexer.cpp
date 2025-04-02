@@ -61,7 +61,7 @@ vector<Lexer::Token> Lexer::Lex() {
         size_t last = 0, i = 0;
         while (i < line.size()) {
             if(line[i] == 0) //remove ts💔💔
-                cerr << "bad bad time should not be here ever!!!!!" << endl;
+                throw runtime_error("bad bad time should not be here ever!!!!!");
             if(line[i] == ' ') {
                 PushToken(line, tokens, i++, 1, last);
                 continue;
