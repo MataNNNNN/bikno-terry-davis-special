@@ -27,8 +27,8 @@ void PushToken(const string& line, vector<Lexer::Token>& tokens, size_t i, int c
         string str = line.substr(last, i - last);
         if(str.size() > 1 && isdigit(str[0]) && str[1] < 0)
             tokens.push_back({Lexer::TokenType::INT_LIT, str});
-        else if(str.size() > 1 && str[0] > 0 && str[1] > 0) //TODO: make it goated
-            tokens.push_back({Lexer::TokenType::STRING_LIT, str});
+        // else if(str.size() > 1 && str[0] > 0 && str[1] > 0) //TODO: make it goated
+        //     tokens.push_back({Lexer::TokenType::STRING_LIT, str});
         else if(keywords.find(str) != keywords.end())
             tokens.push_back({keywords.at(str)});
         else
