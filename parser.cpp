@@ -75,6 +75,10 @@ class Address : public Value {
         string getRef() const override {
             return size + ("PTR [rbp-" + to_string(i)) + "]";
         }
+
+        ~Address() {
+            cout << i << " " << size << endl;
+        }
 };
 const char* Address::lengths[4] {
     "BYTE", //1
@@ -112,9 +116,9 @@ int ParseInt(const Lexer::Token& token) {
 class Assignment : public Instruction {
     public:
         const Value* into;
-        const shared_ptr<Value>& value; //TODO: retink
+        shared_ptr<Value> value; //TODO: retink
 
-        Assignment(const Value* into, const shared_ptr<Value>& value): into(into), value(value) {}
+        Assignment(const Value* into, shared_ptr<Value> value): into(into), value(value) {}
         string generate() const override {
             if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(value))
                 return op->generate(into);
@@ -139,7 +143,7 @@ class Addition : public Operator {
         string generate(const Value* store) override {
             ostringstream oss;
             this->store = store;
-
+            assert(store && "fucked up");
             if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(left))
                 oss << op->generate(store);
             else if(store != left.get())
@@ -304,10 +308,15 @@ vector<unique_ptr<Instruction>> Parser::Parse() {
             case Lexer::TokenType::ASSIGNMENT:
                 if(tokens[i-1].type != Lexer::TokenType::IDENTIFIER || !tokens[i-1].value.has_value() || variables.find(tokens[i-1].value.value()) == variables.end())
                     throw runtime_error("assigment gone wrong: " + to_string(i));
-                instructions.push_back(make_unique<Assignment>(variables[tokens[i-1].value.value()].get(), parseExpression(tokens, ++i)));
+                for(pair d: variables)
+                    cout << d.first << ": " << d.second << endl;
+                cout << tokens[i-1].value.value() << endl;
+                instructions.push_back(make_unique<Assignment>(variables.at("var").get(), parseExpression(tokens, ++i)));
                 break;
         }
     }
     return move(instructions);
 }
 }
+
+//variables.at(tokens[i-1].value.value()).get()
