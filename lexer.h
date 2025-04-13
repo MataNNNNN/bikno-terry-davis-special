@@ -24,6 +24,7 @@ class Lexer {
             SUBTRACTION,
             MULTIPLICATION,
             DIVISION,
+            REMAINDER,
             OPEN_PAREN,
             CLOSE_PAREN,
             INT_TYPE,
