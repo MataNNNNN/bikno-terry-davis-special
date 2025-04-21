@@ -31,14 +31,16 @@ int main(int argc, char* argv[]) {
     Parser::Parser parser(tokens);
     vector<unique_ptr<Parser::Instruction>> instruction = parser.Parse();
     ofstream out("a.out.s");
+    ostringstream oss;
     out << "global _start\nsection .text\n_start:";
     cout << instruction.size() << endl;
     for(int i = 0; i < instruction.size(); i++) {
-        string s = instruction[i]->generate();
-        cout << i << s << endl;
-        out << s << '\n';
+        instruction[i]->generate(oss);
+        oss << '\n';
     }
-    out << "\nmov    rax, 60\nmov    rdi, 0\nsyscall";
+    string l = oss.str();
+    cout << l << endl;
+    out << l << "\nmov    rax, 60\nmov    rdi, 0\nsyscall";
     // system("nasm -felf64 a.out.s -o a.out.o && ld a.out.o -o a.out");
     return 0;
 }

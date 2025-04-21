@@ -14,8 +14,8 @@ class PlainASM : public Instruction {
         string s;
         PlainASM(string s) : s(s) {}
 
-        string generate() const override {
-            return s;
+        void generate(ostringstream& oss) const override {
+            oss << s;
         }
 };
 
@@ -62,8 +62,8 @@ shared_ptr<Register> Register::rax(make_shared<Register>("rax")),
     Register::r15(make_shared<Register>("r15"));
 
 const shared_ptr<Register> Register::registers[9] = {
-    Register::r8,
     Register::rbx,
+    Register::r8,
     Register::r9,
     Register::r10,
     Register::r11,
@@ -95,18 +95,15 @@ class Operator : public Value {
 
         Operator(shared_ptr<Value> left, shared_ptr<Value> right): left(move(left)), right(move(right)) {}
 
-        virtual string generate(shared_ptr<Value> store) = 0;
+        virtual void generate(shared_ptr<Value> store, ostringstream& oss) = 0;
         string getRef() const override {
             return store->getRef();
         }
 };
 
 int ParseInt(const Lexer::Token& token) {
-    if(token.type != Lexer::TokenType::INT_LIT || !token.value.has_value()) {
+    if(token.type != Lexer::TokenType::INT_LIT || !token.value.has_value())
         throw runtime_error("expected integer");
-        exit(1);
-        return -1;
-    }
     
     int r = 0;
     for(size_t i = 0; i < token.value.value().size(); i += 7)
@@ -119,10 +116,11 @@ class Assignment : public Instruction {
         shared_ptr<Value> into, value; //TODO: retink
 
         Assignment(shared_ptr<Value> into, shared_ptr<Value> value): into(into), value(value) {}
-        string generate() const override {
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(value))
-                return op->generate(into);
-            return "\nmov    " + into->getRef() + ", " + value->getRef();
+        void generate(ostringstream& oss) const override {
+            if(auto op = dynamic_pointer_cast<Operator>(value))
+                op->generate(into, oss);
+            else
+                oss << "\nmov    " << into->getRef() + ", " + value->getRef();
         }
 };
 
@@ -131,8 +129,8 @@ class Return : public Instruction {
         const shared_ptr<Value> code;
 
         Return(const shared_ptr<Value> code): code(code) {}
-        string generate() const override {
-            return Assignment(Register::rax, code).generate();// + "\npop rbp\nret\n";
+        void generate(ostringstream& oss) const override {
+            Assignment(Register::rax, code).generate(oss);// + "\npop rbp\nret\n";
         }
 };
 
@@ -140,19 +138,19 @@ class Addition : public Operator {
     public:
         Addition(shared_ptr<Value> left, shared_ptr<Value> right): Operator(left, right) {}
 
-        string generate(shared_ptr<Value> store) override {
-            ostringstream oss;
+        void generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
             assert(store && "fucked up");
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(left))
-                oss << op->generate(store);
-            else if(store != left)
-                oss << Assignment(store, left).generate();
 
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(right))
-                oss << op->generate(Register::get());
-            oss << "\nadd    " << store->getRef() << ", " << right->getRef();
-            return oss.str();
+            if(auto op = dynamic_pointer_cast<Operator>(left))
+                op->generate(store, oss);
+            else if(store != left && store != right)
+                Assignment(store, left).generate(oss);
+
+            if(auto op = dynamic_pointer_cast<Operator>(right))
+                op->generate(Register::get(), oss);
+
+            oss << "\nadd    " << store->getRef() << ", " << (store == left) ? right->getRef() : left->getRef();
         }
 };
 
@@ -160,19 +158,17 @@ class Subtraction : public Operator {
     public:
         Subtraction(shared_ptr<Value> left, shared_ptr<Value> right): Operator(left, right) {}
 
-        string generate(shared_ptr<Value> store) override {
-            ostringstream oss;
+        void generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
 
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(left))
-                oss << op->generate(store);
+            if(auto op = dynamic_pointer_cast<Operator>(left))
+                op->generate(store, oss);
             else if(store != left)
-                oss << Assignment(store, left).generate();
+                Assignment(store, left).generate(oss);
 
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(right))
-                oss << op->generate(Register::get());
+            if(auto op = dynamic_pointer_cast<Operator>(right))
+                op->generate(Register::get(), oss);
             oss << "\nsub    " << store->getRef() << ", " << right->getRef();
-            return oss.str();
         }
 };
 
@@ -180,15 +176,10 @@ class Multiplication : public Operator {
     public:
         Multiplication(shared_ptr<Value> left, shared_ptr<Value> right): Operator(left, right) {}
 
-        string generate(shared_ptr<Value> store) override {
-            ostringstream oss;
+        void generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(left))
-                oss << op->generate(store);
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(right))
-                oss << op->generate(Register::get());
-            oss << Assignment(store, left).generate() << "\nimul   " << store->getRef() << ", " << right->getRef();
-            return oss.str();
+            oss << "imul   ";
+            
         }
 };
 
@@ -196,25 +187,24 @@ class Division : public Operator {
     public:
         Division(shared_ptr<Value> left, shared_ptr<Value> right) : Operator(left, right) {}
 
-        string generate(shared_ptr<Value> store) override {
-            ostringstream oss;
+        void generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
 
             shared_ptr<Value> rax = Register::get(), rdx = Register::get();
             oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx\nxor    rdx, rdx"; //replace with assignments
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(left))
-                oss << op->generate(Register::rax);
+            if(auto op = dynamic_pointer_cast<Operator>(left))
+                op->generate(Register::rax, oss);
             else
-                oss << Assignment(Register::rax, left).generate();
+                Assignment(Register::rax, left).generate(oss);
             shared_ptr<Register> r = Register::get();
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(right))
-                oss << op->generate(r);
+            if(auto op = dynamic_pointer_cast<Operator>(right))
+                op->generate(r, oss);
             else
-                oss << Assignment(r, right).generate();
-            oss << "\ndiv    " << r->getRef() << Assignment(Register::rdx, rdx).generate();
+                Assignment(r, right).generate(oss);
+            oss << "\ndiv    " << r->getRef();
+            Assignment(Register::rdx, rdx).generate(oss);
             if(store != Register::rax)
                 oss << "\nmov    " << store->getRef() << ", rax\nmov    rax, " << rax->getRef();
-            return oss.str();
         }
 };
 
@@ -222,25 +212,24 @@ class Remainder : public Operator {
     public:
         Remainder(shared_ptr<Value> left, shared_ptr<Value> right) : Operator(left, right) {}
 
-        string generate(shared_ptr<Value> store) override {
-            ostringstream oss;
+        void generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
 
             shared_ptr<Value> rax = Register::get(), rdx = Register::get();
             oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx";
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(left))
-                oss << op->generate(Register::rax);
+            if(auto op = dynamic_pointer_cast<Operator>(left))
+                op->generate(Register::rax, oss);
             else
-                oss << Assignment(Register::rax, left).generate();
+                Assignment(Register::rax, left).generate(oss);
             shared_ptr<Register> r = Register::get();
-            if(shared_ptr<Operator> op = dynamic_pointer_cast<Operator>(right))
-                oss << op->generate(r);
+            if(auto op = dynamic_pointer_cast<Operator>(right))
+                op->generate(r, oss);
             else
-                oss << Assignment(r, right).generate();
-            oss << "\ndiv    " << r->getRef() << Assignment(Register::rax, rax).generate();
+                Assignment(r, right).generate(oss);
+            oss << "\ndiv    " << r->getRef();
+            Assignment(Register::rax, rax).generate(oss);
             if(store != Register::rdx)
                 oss << "\nmov    " << store->getRef() << ", rdx\nmov    rdx, " << rdx->getRef();
-            return oss.str();
         }
 };
 
@@ -300,7 +289,7 @@ Parser::Parser(const vector<Lexer::Token>& tokens) : tokens(tokens) {}
 vector<unique_ptr<Instruction>> Parser::Parse() {
     vector<unique_ptr<Instruction>> instructions {};
     instructions.push_back(make_unique<Assignment>(Register::rbp, Register::rsp));
-    instructions.push_back(make_unique<PlainASM>("sub    rsp, 16"));
+    instructions.push_back(make_unique<PlainASM>("\nsub    rsp, 16"));
     int stack = 0;
 
     for(i = 0; i < tokens.size(); i++) {
@@ -312,7 +301,7 @@ vector<unique_ptr<Instruction>> Parser::Parse() {
                 break;
             case Lexer::TokenType::INT_TYPE: {
                 if(tokens[i+3].type != Lexer::TokenType::IDENTIFIER || !tokens[i+3].value.has_value())
-                    throw runtime_error("adi brotfeld decleration: " + to_string(i));
+                    throw runtime_error("adi brotfeld declaration: " + to_string(i));
                 int size = ParseInt(tokens[i + 2]);
                 stack += pow(2, size - 1);
                 variables.insert(pair(tokens[i += 3].value.value(), make_shared<Address>(stack, size)));
@@ -320,17 +309,13 @@ vector<unique_ptr<Instruction>> Parser::Parse() {
             }
             case Lexer::TokenType::ASSIGNMENT:
                 if(tokens[i-1].type != Lexer::TokenType::IDENTIFIER || !tokens[i-1].value.has_value() || variables.find(tokens[i-1].value.value()) == variables.end())
-                    throw runtime_error("assigment gone wrong: " + to_string(i));
-                for(pair d: variables)
-                    cout << d.first << ": " << d.second << endl;
-                cout << tokens[i-1].value.value() << endl;
-                i++;
-                instructions.push_back(make_unique<Assignment>(variables.at("var"), parseExpression()));
+                    throw runtime_error("assignment gone wrong: " + to_string(i));
+
+                auto s = variables.at(tokens[i++-1].value.value());
+                instructions.push_back(make_unique<Assignment>(s, parseExpression()));
                 break;
         }
     }
     return move(instructions);
 }
 }
-
-//variables.at().get()

@@ -13,12 +13,13 @@ using namespace std;
 namespace Parser {
 class Instruction {
     public:
-        virtual string generate() const = 0; 
+        virtual void generate(ostringstream& oss) const = 0; 
 };
 
 class Value {
     public:
         virtual string getRef() const = 0;
+        // virtual operator string() const;
 };
 
 class Address : public Value {

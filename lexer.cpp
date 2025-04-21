@@ -20,7 +20,8 @@ void Lexer::Token::print() const {
 void PushToken(const string& line, vector<Lexer::Token>& tokens, size_t i, int count, size_t& last) {
     static const unordered_map<string, Lexer::TokenType> keywords {
         {"↩️", Lexer::TokenType::RETURN},
-        {"🔢", Lexer::TokenType::INT_TYPE}
+        {"🔢", Lexer::TokenType::INT_TYPE},
+        {"🔄️", Lexer::TokenType::LOOP}
     };
 
     if(i > last) {

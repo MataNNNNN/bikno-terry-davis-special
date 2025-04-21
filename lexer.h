@@ -33,6 +33,7 @@ class Lexer {
             ARRAY,
             ASSIGNMENT,
             INTO,
+            LOOP
         };
 
         struct Token {
