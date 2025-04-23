@@ -9,7 +9,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    if(argc != 2) {
+    if(argc < 2) {
         throw runtime_error("error in the sigma house not 2");
         return 1;
     }
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     }
     string l = oss.str();
     cout << l << endl;
-    out << l << "\nmov    rax, 60\nmov    rdi, 0\nsyscall";
-    // system("nasm -felf64 a.out.s -o a.out.o && ld a.out.o -o a.out");
+    out << l << "\nmov    rax, 60\nsyscall" << endl; //\nmov    rdi, 0
+    argv[2] && system("nasm -felf64 a.out.s -o a.out.o && ld a.out.o -o a.out");
     return 0;
 }

@@ -32,8 +32,6 @@ class Address : public Value {
         Address(int i, int size);
 
         string getRef() const override;
-
-        ~Address();
 };
 
 class Parser {

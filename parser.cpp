@@ -85,10 +85,6 @@ string Address::getRef() const {
     return size + (" [rbp-" + to_string(i)) + "]";
 }
 
-Address::~Address() {
-    std::cout << i << " freed " << size << endl;
-}
-
 class Operator : public Value {
     public:
         shared_ptr<Value> left, right, store;
@@ -130,7 +126,7 @@ class Return : public Instruction {
 
         Return(const shared_ptr<Value> code): code(code) {}
         void generate(ostringstream& oss) const override {
-            Assignment(Register::rax, code).generate(oss);// + "\npop rbp\nret\n";
+            Assignment(Register::rdi, code).generate(oss);// + "\npop rbp\nret\n";
         }
 };
 
@@ -141,7 +137,7 @@ class Addition : public Operator {
         void generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
             assert(store && "fucked up");
-
+            
             if(auto op = dynamic_pointer_cast<Operator>(left))
                 op->generate(store, oss);
             else if(store != left && store != right)
@@ -150,7 +146,7 @@ class Addition : public Operator {
             if(auto op = dynamic_pointer_cast<Operator>(right))
                 op->generate(Register::get(), oss);
 
-            oss << "\nadd    " << store->getRef() << ", " << (store == left) ? right->getRef() : left->getRef();
+            oss << "\nadd    " << store->getRef() << ", " << (store == right ? left->getRef() : right->getRef());
         }
 };
 
@@ -178,8 +174,20 @@ class Multiplication : public Operator {
 
         void generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
-            oss << "imul   ";
+
+            auto t = dynamic_pointer_cast<Register>(store) ? store : Register::get();
+
+            if(auto op = dynamic_pointer_cast<Operator>(left))
+                op->generate(t, oss);
+            else
+                Assignment(t, left).generate(oss);
             
+            if(auto op = dynamic_pointer_cast<Operator>(right))
+                op->generate(Register::get(), oss);
+
+            oss << "\nimul   " << t->getRef() << ", " << right->getRef();
+            if(t != store)
+                Assignment(store, t).generate(oss);
         }
 };
 
@@ -235,19 +243,29 @@ class Remainder : public Operator {
 
 shared_ptr<Value> Parser::parseInner() {
     shared_ptr<Value> t = nullptr;
-    if(tokens[i].type == Lexer::TokenType::INT_LIT)
-        t = make_shared<Constant>(ParseInt(tokens[i]));
-    else if(tokens[i].type == Lexer::TokenType::OPEN_PAREN) {
+    bool negative = false;
+    if(tokens[i].type == Lexer::TokenType::SUBTRACTION) {
+        negative = true; //later
         i++;
-        t = parseExpression();
-    } else if(tokens[i].type == Lexer::TokenType::IDENTIFIER) {
-        assert(tokens[i].value.has_value() && "yeaheya");
-
-        cout << "toktopk " << tokens[i].value.value() << " " << variables.at(tokens[i].value.value()).use_count() << endl;
-        t = variables.at(tokens[i].value.value());
     }
-    else
-        throw runtime_error("wth: " + to_string(i));
+
+    switch (tokens[i].type) {
+        case Lexer::TokenType::INT_LIT:
+            t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1));
+            break;
+        case Lexer::TokenType::OPEN_PAREN:
+            i++;
+            t = parseExpression();
+            break;
+        case Lexer::TokenType::IDENTIFIER:
+            assert(tokens[i].value.has_value() && "yeaheya");
+            
+            t = variables.at(tokens[i].value.value());
+            break;
+        default:
+            throw runtime_error("wth: " + to_string(i));
+            break;
+    }
     i++;
     return move(t);
 }
@@ -297,11 +315,11 @@ vector<unique_ptr<Instruction>> Parser::Parse() {
             case Lexer::TokenType::RETURN:
                 i++;
                 instructions.push_back(make_unique<Return>(parseExpression()));
-                cout << i << endl;
                 break;
             case Lexer::TokenType::INT_TYPE: {
                 if(tokens[i+3].type != Lexer::TokenType::IDENTIFIER || !tokens[i+3].value.has_value())
                     throw runtime_error("adi brotfeld declaration: " + to_string(i));
+                
                 int size = ParseInt(tokens[i + 2]);
                 stack += pow(2, size - 1);
                 variables.insert(pair(tokens[i += 3].value.value(), make_shared<Address>(stack, size)));
