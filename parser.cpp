@@ -14,8 +14,9 @@ class PlainASM : public Instruction {
         string s;
         PlainASM(string s) : s(s) {}
 
-        void generate(ostringstream& oss) const override {
+        ostringstream& generate(ostringstream& oss) const override {
             oss << s;
+            return oss;
         }
 };
 
@@ -91,7 +92,7 @@ class Operator : public Value {
 
         Operator(shared_ptr<Value> left, shared_ptr<Value> right): left(move(left)), right(move(right)) {}
 
-        virtual void generate(shared_ptr<Value> store, ostringstream& oss) = 0;
+        virtual ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) = 0;
         string getRef() const override {
             return store->getRef();
         }
@@ -112,11 +113,12 @@ class Assignment : public Instruction {
         shared_ptr<Value> into, value; //TODO: retink
 
         Assignment(shared_ptr<Value> into, shared_ptr<Value> value): into(into), value(value) {}
-        void generate(ostringstream& oss) const override {
+        ostringstream& generate(ostringstream& oss) const override {
             if(auto op = dynamic_pointer_cast<Operator>(value))
                 op->generate(into, oss);
             else
                 oss << "\nmov    " << into->getRef() + ", " + value->getRef();
+            return oss;
         }
 };
 
@@ -125,8 +127,8 @@ class Return : public Instruction {
         const shared_ptr<Value> code;
 
         Return(const shared_ptr<Value> code): code(code) {}
-        void generate(ostringstream& oss) const override {
-            Assignment(Register::rdi, code).generate(oss);// + "\npop rbp\nret\n";
+        ostringstream& generate(ostringstream& oss) const override {
+            return Assignment(Register::rdi, code).generate(oss); // + "\npop rbp\nret\n";
         }
 };
 
@@ -134,7 +136,7 @@ class Addition : public Operator {
     public:
         Addition(shared_ptr<Value> left, shared_ptr<Value> right): Operator(left, right) {}
 
-        void generate(shared_ptr<Value> store, ostringstream& oss) override {
+        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
             assert(store && "fucked up");
             
@@ -147,6 +149,7 @@ class Addition : public Operator {
                 op->generate(Register::get(), oss);
 
             oss << "\nadd    " << store->getRef() << ", " << (store == right ? left->getRef() : right->getRef());
+            return oss;
         }
 };
 
@@ -154,7 +157,7 @@ class Subtraction : public Operator {
     public:
         Subtraction(shared_ptr<Value> left, shared_ptr<Value> right): Operator(left, right) {}
 
-        void generate(shared_ptr<Value> store, ostringstream& oss) override {
+        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
 
             if(auto op = dynamic_pointer_cast<Operator>(left))
@@ -165,6 +168,7 @@ class Subtraction : public Operator {
             if(auto op = dynamic_pointer_cast<Operator>(right))
                 op->generate(Register::get(), oss);
             oss << "\nsub    " << store->getRef() << ", " << right->getRef();
+            return oss;
         }
 };
 
@@ -172,7 +176,7 @@ class Multiplication : public Operator {
     public:
         Multiplication(shared_ptr<Value> left, shared_ptr<Value> right): Operator(left, right) {}
 
-        void generate(shared_ptr<Value> store, ostringstream& oss) override {
+        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
 
             auto t = dynamic_pointer_cast<Register>(store) ? store : Register::get();
@@ -188,6 +192,7 @@ class Multiplication : public Operator {
             oss << "\nimul   " << t->getRef() << ", " << right->getRef();
             if(t != store)
                 Assignment(store, t).generate(oss);
+            return oss;
         }
 };
 
@@ -195,7 +200,7 @@ class Division : public Operator {
     public:
         Division(shared_ptr<Value> left, shared_ptr<Value> right) : Operator(left, right) {}
 
-        void generate(shared_ptr<Value> store, ostringstream& oss) override {
+        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
 
             shared_ptr<Value> rax = Register::get(), rdx = Register::get();
@@ -213,6 +218,7 @@ class Division : public Operator {
             Assignment(Register::rdx, rdx).generate(oss);
             if(store != Register::rax)
                 oss << "\nmov    " << store->getRef() << ", rax\nmov    rax, " << rax->getRef();
+            return oss;
         }
 };
 
@@ -220,7 +226,7 @@ class Remainder : public Operator {
     public:
         Remainder(shared_ptr<Value> left, shared_ptr<Value> right) : Operator(left, right) {}
 
-        void generate(shared_ptr<Value> store, ostringstream& oss) override {
+        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override {
             this->store = store;
 
             shared_ptr<Value> rax = Register::get(), rdx = Register::get();
@@ -238,6 +244,7 @@ class Remainder : public Operator {
             Assignment(Register::rax, rax).generate(oss);
             if(store != Register::rdx)
                 oss << "\nmov    " << store->getRef() << ", rdx\nmov    rdx, " << rdx->getRef();
+            return oss;
         }
 };
 

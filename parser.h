@@ -13,7 +13,7 @@ using namespace std;
 namespace Parser {
 class Instruction {
     public:
-        virtual void generate(ostringstream& oss) const = 0; 
+        virtual ostringstream& generate(ostringstream& oss) const = 0; 
 };
 
 class Value {
