@@ -5,7 +5,7 @@
 #include <string>
 #include <fstream>
 
-using namespace std;
+using std::string, std::ifstream, std::optional, std::vector;
 
 class Lexer {
     protected:

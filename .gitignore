@@ -1,6 +1,2 @@
 .vscode/
-*.s
-test*
-main
-a.out
-a.out.o
+build/
