@@ -10,10 +10,8 @@ int main(int argc, char* argv[]) {
         throw runtime_error("error in the sigma house not 2");
 
     ifstream file(argv[1]);
-    if(!file) {
+    if(!file)
         throw runtime_error("file not found");
-        return 1;
-    }
 
     Lexer lexer(file);
     vector<Lexer::Token> tokens = lexer.Lex();

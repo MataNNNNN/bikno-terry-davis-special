@@ -1,20 +1,15 @@
-#include <vector>
-#include <optional>
-#include <string>
-#include <fstream>
 #include <iostream>
-#include <bitset>
 #include <unordered_map>
 
 #include "lexer.h"
 
-using namespace std;
+using std::unordered_map, std::runtime_error;
 
 Lexer::Lexer(ifstream& file) : file(file) {}
 
 void Lexer::Token::print() const {
     static const char* names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "remainder", "open_paren", "close_paren", "int_type", "size_operator", "pointer", "array", "assignment", "into"};
-    cout << names[(int)type] << " " << value.value_or("no val") << endl;
+    std::cout << names[(int)type] << " " << value.value_or("no val") << std::endl;
 }
 
 void PushToken(const string& line, vector<Lexer::Token>& tokens, size_t i, int count, size_t& last) {
@@ -35,7 +30,7 @@ void PushToken(const string& line, vector<Lexer::Token>& tokens, size_t i, int c
         else
             tokens.push_back({Lexer::TokenType::IDENTIFIER, str});
     } else
-        cout << "empty string " << last << " " << i << endl;
+        std::cout << "empty string " << last << " " << i << std::endl;
     last = i + count;
 }
 

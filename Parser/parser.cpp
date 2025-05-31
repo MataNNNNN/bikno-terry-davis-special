@@ -18,8 +18,8 @@ int ParseInt(const Lexer::Token& token) {
     return r;
 }
 
-shared_ptr<Value> Parser::parseInner() {
-    shared_ptr<Value> t = nullptr;
+shared_ptr<RValue> Parser::parseInner() {
+    shared_ptr<RValue> t = nullptr;
     bool negative = false;
     if(tokens[i].type == Lexer::TokenType::SUBTRACTION) {
         negative = true; //later
@@ -48,8 +48,8 @@ shared_ptr<Value> Parser::parseInner() {
 }
 
 
-shared_ptr<Value> Parser::parseTerm() {
-    shared_ptr<Value> node = parseInner();
+shared_ptr<RValue> Parser::parseTerm() {
+    shared_ptr<RValue> node = parseInner();
     while(tokens[i].type == Lexer::TokenType::MULTIPLICATION || tokens[i].type == Lexer::TokenType::DIVISION || tokens[i].type == Lexer::TokenType::REMAINDER) {
         if(tokens[i].type == Lexer::TokenType::MULTIPLICATION) {
             i++;
@@ -65,8 +65,8 @@ shared_ptr<Value> Parser::parseTerm() {
     return node;
 }
 
-shared_ptr<Value> Parser::parseExpression() {
-    shared_ptr<Value> node = parseTerm();
+shared_ptr<RValue> Parser::parseExpression() {
+    shared_ptr<RValue> node = parseTerm();
     while(tokens[i].type == Lexer::TokenType::ADDITION || tokens[i].type == Lexer::TokenType::SUBTRACTION) {
         if(tokens[i].type == Lexer::TokenType::ADDITION) {
             i++;
@@ -123,3 +123,25 @@ vector<unique_ptr<Instruction>> Parser::Parse() {
 
     return instructions;
 }
+
+struct Scope {
+    int a;
+    unordered_map<string, shared_ptr<Address>> vars;
+};
+
+class Scopes : public std::stack<Scope> {
+    public:
+        Scopes() : std::stack<Scope>() {}
+        // gay
+        shared_ptr<Address> Get(string& name) {
+            if(empty())
+                throw new runtime_error("unknown");
+            if(top().vars.find(name) != top().vars.end())
+                return top().vars.at(name);
+            Scope s = top();
+            pop();
+            shared_ptr<Address> r = Get(name);
+            push(s);
+            return r;
+        }
+};

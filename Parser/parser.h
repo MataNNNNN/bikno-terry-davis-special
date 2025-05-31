@@ -18,7 +18,7 @@ class Parser {
 
         vector<unique_ptr<Instruction>> ParseScope();
 
-        shared_ptr<Value> parseExpression();
-        shared_ptr<Value> parseInner();
-        shared_ptr<Value> parseTerm();
+        shared_ptr<RValue> parseExpression();
+        shared_ptr<RValue> parseInner();
+        shared_ptr<RValue> parseTerm();
 };

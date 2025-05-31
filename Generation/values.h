@@ -5,13 +5,15 @@
 
 using std::string, std::shared_ptr;
 
-class Value {
+class RValue {
     public:
         virtual string getRef() const = 0;
         // virtual operator string() const;
 };
 
-class Address : public Value {
+class LValue : public RValue {};
+
+class Address : public LValue {
     public:
         static const char* lengths[4];
 
@@ -23,14 +25,14 @@ class Address : public Value {
         string getRef() const override;
 };
 
-class Constant : public Value {
+class Constant : public RValue {
     public:
         int val;
         Constant(int val);
         string getRef() const override;
 };
 
-class Register : public Value {
+class Register : public LValue {
     public:
         static const shared_ptr<Register> registers[9];
         static shared_ptr<Register> rax, rdi, rsi, rdx, rbp, rsp, rbx, r8, r9, r10, r11, r12, r13, r14, r15;

@@ -23,24 +23,24 @@ class PlainASM : public Instruction {
 
 class Assignment : public Instruction {
     public:
-        shared_ptr<Value> into, value;
+        shared_ptr<LValue> into;
+        shared_ptr<RValue> value;
 
-        Assignment(shared_ptr<Value> into, shared_ptr<Value> value);
+        Assignment(shared_ptr<LValue> into, shared_ptr<RValue> value);
         ostringstream& generate(ostringstream& oss) const override;
 };
 
 class Return : public Instruction {
     public:
-        shared_ptr<Value> code;
+        shared_ptr<RValue> code;
 
-        Return(shared_ptr<Value> code);
+        Return(shared_ptr<RValue> code);
         ostringstream& generate(ostringstream& oss) const override;
 };
 
 class If : public Instruction {
     public:
-        vector<unique_ptr<Instruction>> scope;
-        shared_ptr<Value> condition;
+        shared_ptr<RValue> condition;
 };
 
 class Label : public Instruction {

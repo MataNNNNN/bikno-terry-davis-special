@@ -6,47 +6,48 @@
 
 using std::ostringstream;
 
-class Operator : public Value {
+class Operator : public RValue {
     public:
-        shared_ptr<Value> left, right, store;
+        shared_ptr<RValue> left, right;
+        shared_ptr<LValue> store;
 
-        Operator(shared_ptr<Value> left, shared_ptr<Value> right);
+        Operator(shared_ptr<RValue> left, shared_ptr<RValue> right);
 
-        virtual ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) = 0;
+        virtual ostringstream& generate(shared_ptr<LValue> store, ostringstream& oss) = 0;
         string getRef() const override;
 };
 
 class Addition : public Operator {
     public:
-        Addition(shared_ptr<Value> left, shared_ptr<Value> right);
+        Addition(shared_ptr<RValue> left, shared_ptr<RValue> right);
 
-        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override;
+        ostringstream& generate(shared_ptr<LValue> store, ostringstream& oss) override;
 };
 
 class Subtraction : public Operator {
     public:
-        Subtraction(shared_ptr<Value> left, shared_ptr<Value> right);
+        Subtraction(shared_ptr<RValue> left, shared_ptr<RValue> right);
 
-        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override;
+        ostringstream& generate(shared_ptr<LValue> store, ostringstream& oss) override;
 };
 
 class Multiplication : public Operator {
     public:
-        Multiplication(shared_ptr<Value> left, shared_ptr<Value> right);
+        Multiplication(shared_ptr<RValue> left, shared_ptr<RValue> right);
 
-        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override;
+        ostringstream& generate(shared_ptr<LValue> store, ostringstream& oss) override;
 };
 
 class Division : public Operator {
     public:
-        Division(shared_ptr<Value> left, shared_ptr<Value> right);
+        Division(shared_ptr<RValue> left, shared_ptr<RValue> right);
 
-        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override;
+        ostringstream& generate(shared_ptr<LValue> store, ostringstream& oss) override;
 };
 
 class Remainder : public Operator {
     public:
-        Remainder(shared_ptr<Value> left, shared_ptr<Value> right);
+        Remainder(shared_ptr<RValue> left, shared_ptr<RValue> right);
 
-        ostringstream& generate(shared_ptr<Value> store, ostringstream& oss) override;
+        ostringstream& generate(shared_ptr<LValue> store, ostringstream& oss) override;
 };

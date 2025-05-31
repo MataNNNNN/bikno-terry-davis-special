@@ -54,7 +54,7 @@ const shared_ptr<Register> Register::get() {
     for(auto& reg: registers)
         if(reg.use_count() <= 2)
             return reg;
-    throw std::runtime_error("no registers available, deal with it");
+    throw std::runtime_error("no registers available deal with it"); //opopopop
 }
 
 Register::Register(const string reg) : reg(reg) {}

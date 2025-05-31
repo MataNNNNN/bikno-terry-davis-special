@@ -9,7 +9,7 @@ ostringstream& PlainASM::generate(ostringstream& oss) const {
     return oss;
 }
 
-Assignment::Assignment(shared_ptr<Value> into, shared_ptr<Value> value): into(into), value(value) {}
+Assignment::Assignment(shared_ptr<LValue> into, shared_ptr<RValue> value): into(into), value(value) {}
 ostringstream& Assignment::generate(ostringstream& oss) const {
     if(auto op = dynamic_pointer_cast<Operator>(value))
         op->generate(into, oss);
@@ -18,9 +18,9 @@ ostringstream& Assignment::generate(ostringstream& oss) const {
     return oss;
 }
 
-Return::Return(const shared_ptr<Value> code): code(code) {}
+Return::Return(const shared_ptr<RValue> code): code(code) {}
 ostringstream& Return::generate(ostringstream& oss) const {
-    return Assignment(Register::rdi, code).generate(oss); // + "\npop rbp\nret\n";
+    return Assignment(Register::rdi, code).generate(oss); // + "\npop rbp\nret\n"; whartever
 }
 
 Label::Label(string name, vector<unique_ptr<Instruction>> instructions) : name(name), instructions(std::move(instructions)) {}
