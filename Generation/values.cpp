@@ -4,43 +4,62 @@
 
 using std::make_shared, std::to_string;
 
-const char* Address::lengths[4] {
-    "BYTE", //1
-    "WORD", //2
-    "DWORD", //4
-    "QWORD" //8
-};
+Address::Address(int i, int size): i(i), size(size) {}
 
-Address::Address(int i, const char* size): i(i), size(size) {}
-Address::Address(int i, int size): i(i), size(lengths[size-1]) {}
-
-string Address::getRef() const {
-    return size + (" [rbp-" + std::to_string(i)) + "]";
+string Address::getRef()  {
+    return getRef(size);
+}
+string Address::getRef(int size)  {
+    const char* n;
+    switch (size) {
+        case 1:
+            n = "BYTE";
+            break;
+        case 2:
+            n = "WORD";
+            break;
+        case 4:
+            n = "DWORD";
+            break;
+        case 8:
+            n = "QWORD";
+            break;
+    }
+    return n + (" [rbp-" + std::to_string(i) + "]");
+}
+int Address::getSize()  {
+    return size;
 }
 
-Constant::Constant(int val) : val(val) {}
-string Constant::getRef() const {
+Constant::Constant(int val, int size) : val(val), size(size) {}
+
+string Constant::getRef()  {
     return std::to_string(val);
 }
+int Constant::getSize()  {
+    return size;
+}
 
-shared_ptr<Register> Register::rax(make_shared<Register>("rax")),
-    Register::rdi(make_shared<Register>("rdi")),
-    Register::rsi(make_shared<Register>("rsi")),
-    Register::rdx(make_shared<Register>("rdx")),
-    Register::rbp(make_shared<Register>("rbp")),
-    Register::rsp(make_shared<Register>("rsp")),
-    Register::rbx(make_shared<Register>("rbx")),
-    Register::r8(make_shared<Register>("r8")),
-    Register::r9(make_shared<Register>("r9")),
-    Register::r10(make_shared<Register>("r10")),
-    Register::r11(make_shared<Register>("r11")),
-    Register::r12(make_shared<Register>("r12")),
-    Register::r13(make_shared<Register>("r13")),
-    Register::r14(make_shared<Register>("r14")),
-    Register::r15(make_shared<Register>("r15"));
+shared_ptr<Register>
+    Register::a(make_shared<Register>("al", "ax", "eax", "rax")),
+    Register::b(make_shared<Register>("bl", "bx", "ebx", "rbx")),
+    Register::c(make_shared<Register>("cl", "cx", "ecx", "rcx")),
+    Register::d(make_shared<Register>("dl", "dx", "edx", "rdx")),
+    Register::si(make_shared<Register>("sil", "si", "esi", "rsi")),
+    Register::di(make_shared<Register>("dil", "di", "edi", "rdi")),
+    Register::bp(make_shared<Register>("bpl", "bp", "ebp", "rbp")),
+    Register::sp(make_shared<Register>("spl", "sp", "esp", "rsp")),
+    Register::r8(make_shared<Register>("r8b", "r8w", "r8d", "r8")),
+    Register::r9(make_shared<Register>("r9b", "r9w", "r9d", "r9")),
+    Register::r10(make_shared<Register>("r10b", "r10w", "r10d", "r10")),
+    Register::r11(make_shared<Register>("r11b", "r11w", "r11d", "r11")),
+    Register::r12(make_shared<Register>("r12b", "r12w", "r12d", "r12")),
+    Register::r13(make_shared<Register>("r13b", "r13w", "r13d", "r13")),
+    Register::r14(make_shared<Register>("r14b", "r14w", "r14d", "r14")),
+    Register::r15(make_shared<Register>("r15b", "r15w", "r15d", "r15"));
 
-const shared_ptr<Register> Register::registers[9] = {
-    Register::rbx,
+ shared_ptr<Register> Register::registers[9] = {
+    Register::b,
     Register::r8,
     Register::r9,
     Register::r10,
@@ -50,14 +69,34 @@ const shared_ptr<Register> Register::registers[9] = {
     Register::r14,
     Register::r15
 };
-const shared_ptr<Register> Register::get() {
+
+ shared_ptr<Register> Register::get(int size) {
     for(auto& reg: registers)
-        if(reg.use_count() <= 2)
+        if(reg.use_count() <= 2) {
+            reg->size = size;
             return reg;
+        }
     throw std::runtime_error("no registers available deal with it"); //opopopop
 }
 
-Register::Register(const string reg) : reg(reg) {}
-string Register::getRef() const {
-    return reg;
+Register::Register(string n8, string n16, string n32, string n64) : n8(n8), n16(n16), n32(n32), n64(n64), size(8) {}
+string Register::getRef()  {
+    return getRef(size);
+}
+string Register::getRef(int size) {
+    this->size = size;
+    switch (size) {
+        case 1:
+            return n8;
+        case 2:
+            return n16;
+        case 4:
+            return n32;
+        case 8:
+            return n64;
+    }
+    throw std::runtime_error("brotrobot");
+}
+int Register::getSize()  {
+    return size;
 }

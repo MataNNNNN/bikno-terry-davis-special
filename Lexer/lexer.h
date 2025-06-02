@@ -40,8 +40,8 @@ class Lexer {
             TokenType type;
             optional<string> value;
 
-            void print() const;
-            inline operator int() const {
+            void print() ;
+            inline operator int()  {
                 return (int)type;
             }
         };

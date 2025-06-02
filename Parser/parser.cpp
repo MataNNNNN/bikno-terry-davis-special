@@ -8,7 +8,7 @@
 
 using std::runtime_error, std::make_shared, std::to_string, std::make_unique;
 
-int ParseInt(const Lexer::Token& token) {
+int ParseInt( Lexer::Token& token) {
     if(token.type != Lexer::TokenType::INT_LIT || !token.value.has_value())
         throw runtime_error("expected integer");
     
@@ -28,7 +28,7 @@ shared_ptr<RValue> Parser::parseInner() {
 
     switch (tokens[i].type) {
         case Lexer::TokenType::INT_LIT:
-            t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1));
+            t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1), 4);
             break;
         case Lexer::TokenType::OPEN_PAREN:
             i++;
@@ -110,14 +110,14 @@ vector<unique_ptr<Instruction>> Parser::ParseScope() {
     return instructions;
 }
 
-Parser::Parser(const vector<Lexer::Token>& tokens) : tokens(tokens) {}
+Parser::Parser( vector<Lexer::Token>& tokens) : tokens(tokens) {}
 vector<unique_ptr<Instruction>> Parser::Parse() {
     vector<unique_ptr<Instruction>> instructions {};
     i = 0;
     stack = 1;
     vector<unique_ptr<Instruction>> start = ParseScope();
     start.insert(start.begin(), make_unique<PlainASM>("\nsub    rsp, 16"));
-    start.insert(start.begin(), make_unique<Assignment>(Register::rbp, Register::rsp));
+    start.insert(start.begin(), make_unique<Assignment>(Register::bp, Register::sp));
 
     instructions.push_back(make_unique<Label>("_start", std::move(start)));
 

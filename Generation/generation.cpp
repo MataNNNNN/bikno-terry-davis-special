@@ -4,27 +4,27 @@
 using std::dynamic_pointer_cast;
 
 PlainASM::PlainASM(string s) : s(s) {}
-ostringstream& PlainASM::generate(ostringstream& oss) const {
+ostringstream& PlainASM::generate(ostringstream& oss)  {
     oss << s;
     return oss;
 }
 
 Assignment::Assignment(shared_ptr<LValue> into, shared_ptr<RValue> value): into(into), value(value) {}
-ostringstream& Assignment::generate(ostringstream& oss) const {
+ostringstream& Assignment::generate(ostringstream& oss)  {
     if(auto op = dynamic_pointer_cast<Operator>(value))
         op->generate(into, oss);
     else
-        oss << "\nmov    " << into->getRef() + ", " + value->getRef();
+        oss << "\nmov    " << into->getRef(value->getSize()) + ", " + value->getRef();
     return oss;
 }
 
-Return::Return(const shared_ptr<RValue> code): code(code) {}
-ostringstream& Return::generate(ostringstream& oss) const {
-    return Assignment(Register::rdi, code).generate(oss); // + "\npop rbp\nret\n"; whartever
+Return::Return(shared_ptr<RValue> code): code(code) {}
+ostringstream& Return::generate(ostringstream& oss)  {
+    return Assignment(Register::di, code).generate(oss); // + "\npop rbp\nret\n"; whartever
 }
 
 Label::Label(string name, vector<unique_ptr<Instruction>> instructions) : name(name), instructions(std::move(instructions)) {}
-ostringstream& Label::generate(ostringstream& oss) const {
+ostringstream& Label::generate(ostringstream& oss)  {
     oss << '\n' << name << ':';
     
     for(auto& instruction : instructions)

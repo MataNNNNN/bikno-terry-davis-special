@@ -7,38 +7,50 @@ using std::string, std::shared_ptr;
 
 class RValue {
     public:
-        virtual string getRef() const = 0;
-        // virtual operator string() const;
+        virtual string getRef()  = 0;
+        virtual int getSize()  = 0;
+        // virtual operator string() ;
 };
 
-class LValue : public RValue {};
+class LValue : public RValue {
+    public:
+        virtual string getRef()  = 0;
+        virtual string getRef(int size)  = 0;
+};
 
 class Address : public LValue {
     public:
-        static const char* lengths[4];
+        int i, size;
 
-        int i;
-        const char* size;
-        Address(int i, const char* size);
         Address(int i, int size);
 
-        string getRef() const override;
+        string getRef()  override;
+        string getRef(int size)  override;
+        int getSize()  override;
 };
 
 class Constant : public RValue {
     public:
-        int val;
-        Constant(int val);
-        string getRef() const override;
+        int val, size;
+
+        Constant(int val, int size);
+
+        string getRef()  override;
+        int getSize()  override;
 };
 
 class Register : public LValue {
     public:
-        static const shared_ptr<Register> registers[9];
-        static shared_ptr<Register> rax, rdi, rsi, rdx, rbp, rsp, rbx, r8, r9, r10, r11, r12, r13, r14, r15;
-        static const shared_ptr<Register> get();
+        static  shared_ptr<Register> registers[9];
+        static shared_ptr<Register> a, b, c, d, si, di, bp, sp, r8, r9, r10, r11, r12, r13, r14, r15;
+        static  shared_ptr<Register> get(int size);
 
-        const string reg;
-        Register(const string reg);
-        string getRef() const override;
+        string n8, n16, n32, n64;
+        int size;
+
+        Register(string n8, string n16, string n32, string n64);
+
+        string getRef()  override;
+        string getRef(int size)  override;
+        int getSize()  override;
 };

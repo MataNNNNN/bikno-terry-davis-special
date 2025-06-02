@@ -7,13 +7,13 @@ using std::unordered_map, std::runtime_error;
 
 Lexer::Lexer(ifstream& file) : file(file) {}
 
-void Lexer::Token::print() const {
-    static const char* names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "remainder", "open_paren", "close_paren", "int_type", "size_operator", "pointer", "array", "assignment", "into"};
+void Lexer::Token::print()  {
+    static  char* names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "remainder", "open_paren", "close_paren", "int_type", "size_operator", "pointer", "array", "assignment", "into"};
     std::cout << names[(int)type] << " " << value.value_or("no val") << std::endl;
 }
 
-void PushToken(const string& line, vector<Lexer::Token>& tokens, size_t i, int count, size_t& last) {
-    static const unordered_map<string, Lexer::TokenType> keywords {
+void PushToken( string& line, vector<Lexer::Token>& tokens, size_t i, int count, size_t& last) {
+    static  unordered_map<string, Lexer::TokenType> keywords {
         {"↩️", Lexer::TokenType::RETURN},
         {"🔢", Lexer::TokenType::INT_TYPE},
         {"🔄️", Lexer::TokenType::LOOP}
@@ -38,7 +38,7 @@ vector<Lexer::Token> Lexer::Lex() {
     vector<Token> tokens {};
     string line;
 
-    static const unordered_map<int, TokenType> symbols {
+    static  unordered_map<int, TokenType> symbols {
         {'✊', TokenType::SEMICOLON},
         {'➕', TokenType::ADDITION},
         {'➖', TokenType::SUBTRACTION},
