@@ -26,8 +26,9 @@ ostringstream& Addition::generate(shared_ptr<LValue> store, ostringstream& oss) 
 
     if(auto op = dynamic_pointer_cast<Operator>(right))
         op->generate(Register::get(getSize()), oss);
-
-    oss << "\nadd    " << store->getRef() << ", " << (store == right ? left->getRef() : right->getRef());
+        
+    auto chosen = (store == right ? left : right);
+    oss << "\nadd    " << store->getRef(chosen->getSize()) << ", " << chosen->getRef();
     return oss;
 }
 
@@ -42,7 +43,7 @@ ostringstream& Subtraction::generate(shared_ptr<LValue> store, ostringstream& os
 
     if(auto op = dynamic_pointer_cast<Operator>(right))
         op->generate(Register::get(getSize()), oss);
-    oss << "\nsub    " << store->getRef() << ", " << right->getRef();
+    oss << "\nsub    " << store->getRef(right->getSize()) << ", " << right->getRef();
     return oss;
 }
 
@@ -60,7 +61,7 @@ ostringstream& Multiplication::generate(shared_ptr<LValue> store, ostringstream&
     if(auto op = dynamic_pointer_cast<Operator>(right))
         op->generate(Register::get(getSize()), oss);
 
-    oss << "\nimul   " << t->getRef() << ", " << right->getRef();
+    oss << "\nimul   " << t->getRef(right->getSize()) << ", " << right->getRef();
     if(t != store)
         Assignment(store, t).generate(oss);
     return oss;
@@ -70,8 +71,8 @@ Division::Division(shared_ptr<RValue> left, shared_ptr<RValue> right) : Operator
 ostringstream& Division::generate(shared_ptr<LValue> store, ostringstream& oss) {
     this->store = store;
 
-    shared_ptr<Register> rax = Register::get(getSize()), rdx = Register::get(getSize());
-    oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx\nxor    rdx, rdx"; //replace with assignments
+    shared_ptr<Register> rax = Register::get(8), rdx = Register::get(8);
+    oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx\nxor    rdx, rdx\nxor    rax, rax"; //replace with assignments
 
     if(auto op = dynamic_pointer_cast<Operator>(left))
         op->generate(Register::a, oss);
@@ -95,7 +96,7 @@ Remainder::Remainder(shared_ptr<RValue> left, shared_ptr<RValue> right) : Operat
 ostringstream& Remainder::generate(shared_ptr<LValue> store, ostringstream& oss) {
     this->store = store;
 
-    shared_ptr<Register> rax = Register::get(getSize()), rdx = Register::get(getSize());
+    shared_ptr<Register> rax = Register::get(8), rdx = Register::get(8);
     oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx";
 
     if(auto op = dynamic_pointer_cast<Operator>(left))

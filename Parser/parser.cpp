@@ -28,7 +28,7 @@ shared_ptr<RValue> Parser::parseInner() {
 
     switch (tokens[i].type) {
         case Lexer::TokenType::INT_LIT:
-            t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1), 4);
+            t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1), 1);
             break;
         case Lexer::TokenType::OPEN_PAREN:
             i++;
@@ -124,24 +124,24 @@ vector<unique_ptr<Instruction>> Parser::Parse() {
     return instructions;
 }
 
-struct Scope {
-    int a;
-    unordered_map<string, shared_ptr<Address>> vars;
-};
+// struct Scope {
+//     int a;
+//     unordered_map<string, shared_ptr<Address>> vars;
+// };
 
-class Scopes : public std::stack<Scope> {
-    public:
-        Scopes() : std::stack<Scope>() {}
-        // gay
-        shared_ptr<Address> Get(string& name) {
-            if(empty())
-                throw new runtime_error("unknown");
-            if(top().vars.find(name) != top().vars.end())
-                return top().vars.at(name);
-            Scope s = top();
-            pop();
-            shared_ptr<Address> r = Get(name);
-            push(s);
-            return r;
-        }
-};
+// class Scopes : public std::stack<Scope> {
+//     public:
+//         Scopes() : std::stack<Scope>() {}
+//         // gay
+//         shared_ptr<Address> Get(string& name) {
+//             if(empty())
+//                 throw new runtime_error("unknown");
+//             if(top().vars.find(name) != top().vars.end())
+//                 return top().vars.at(name);
+//             Scope s = top();
+//             pop();
+//             shared_ptr<Address> r = Get(name);
+//             push(s);
+//             return r;
+//         }
+// };

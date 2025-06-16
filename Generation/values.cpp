@@ -70,13 +70,13 @@ shared_ptr<Register>
     Register::r15
 };
 
- shared_ptr<Register> Register::get(int size) {
-    for(auto& reg: registers)
-        if(reg.use_count() <= 2) {
-            reg->size = size;
-            return reg;
-        }
-    throw std::runtime_error("no registers available deal with it"); //opopopop
+shared_ptr<Register> Register::get(int size) {
+for(auto& reg: registers)
+    if(reg.use_count() <= 2) {
+        reg->size = size;
+        return reg;
+    }
+throw std::runtime_error("no registers available deal with it"); //opopopop
 }
 
 Register::Register(string n8, string n16, string n32, string n64) : n8(n8), n16(n16), n32(n32), n64(n64), size(8) {}
