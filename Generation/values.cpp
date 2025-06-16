@@ -10,8 +10,10 @@ string Address::getRef()  {
     return getRef(size);
 }
 string Address::getRef(int size)  {
-    const char* n;
+    string n;
     switch (size) {
+        case 0:
+            return getRef(this->size);
         case 1:
             n = "BYTE";
             break;
@@ -24,8 +26,10 @@ string Address::getRef(int size)  {
         case 8:
             n = "QWORD";
             break;
+        default:
+            throw std::runtime_error("nsdgfdfsg" + std::to_string(size));
     }
-    return n + (" [rbp-" + std::to_string(i) + "]");
+    return n + " [rbp-" + std::to_string(i) + "]";
 }
 int Address::getSize()  {
     return size;
@@ -84,8 +88,10 @@ string Register::getRef()  {
     return getRef(size);
 }
 string Register::getRef(int size) {
-    this->size = size;
+    // this->size = size;
     switch (size) {
+        case 0:
+            return getRef(size);
         case 1:
             return n8;
         case 2:

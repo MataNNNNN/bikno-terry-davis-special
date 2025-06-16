@@ -13,6 +13,8 @@ Assignment::Assignment(shared_ptr<LValue> into, shared_ptr<RValue> value): into(
 ostringstream& Assignment::generate(ostringstream& oss)  {
     if(auto op = dynamic_pointer_cast<Operator>(value))
         op->generate(into, oss);
+    else if(dynamic_pointer_cast<Constant>(value))
+        oss << "\nmov    " << into->getRef() << ", " << value->getRef();
     else
         oss << "\nmov    " << into->getRef(value->getSize()) + ", " + value->getRef();
     return oss;

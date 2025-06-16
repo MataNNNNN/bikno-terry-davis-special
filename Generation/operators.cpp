@@ -50,7 +50,7 @@ Multiplication::Multiplication(shared_ptr<RValue> left, shared_ptr<RValue> right
 ostringstream& Multiplication::generate(shared_ptr<LValue> store, ostringstream& oss) {
     this->store = store;
 
-    auto t = dynamic_pointer_cast<Register>(store) ? store : Register::get(getSize());
+    shared_ptr<LValue> t = dynamic_pointer_cast<Register>(store) ? store : Register::get(getSize());
 
     if(auto op = dynamic_pointer_cast<Operator>(left))
         op->generate(t, oss);
@@ -60,7 +60,7 @@ ostringstream& Multiplication::generate(shared_ptr<LValue> store, ostringstream&
     if(auto op = dynamic_pointer_cast<Operator>(right))
         op->generate(Register::get(getSize()), oss);
 
-    oss << "\nimul   " << t->getRef() << ", " << right->getRef();
+    oss << "\nimul   " << t->getRef(getSize()) << ", " << right->getRef();
     if(t != store)
         Assignment(store, t).generate(oss);
     return oss;

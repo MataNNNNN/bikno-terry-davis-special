@@ -9,7 +9,7 @@ using std::vector, std::unordered_map, std::unique_ptr;
 
 class Parser {
     public:
-         vector<Lexer::Token>& tokens;
+        vector<Lexer::Token>& tokens;
         unordered_map<string, shared_ptr<Address>> variables;
         int i, stack;
 

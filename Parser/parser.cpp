@@ -28,7 +28,7 @@ shared_ptr<RValue> Parser::parseInner() {
 
     switch (tokens[i].type) {
         case Lexer::TokenType::INT_LIT:
-            t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1), 4);
+            t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1), 1);
             break;
         case Lexer::TokenType::OPEN_PAREN:
             i++;
@@ -94,7 +94,7 @@ vector<unique_ptr<Instruction>> Parser::ParseScope() {
                     throw runtime_error("adi brotfeld declaration: " + to_string(i));
                 
                 int size = ParseInt(tokens[i + 2]);
-                stack += (1 << (size - 1)) - (stack % (1 << (size - 1)));
+                stack += size - stack % size;
                 variables.emplace(tokens[i += 3].value.value(), make_shared<Address>(stack, size));
                 break;
             }
@@ -114,7 +114,7 @@ Parser::Parser( vector<Lexer::Token>& tokens) : tokens(tokens) {}
 vector<unique_ptr<Instruction>> Parser::Parse() {
     vector<unique_ptr<Instruction>> instructions {};
     i = 0;
-    stack = 1;
+    stack = 0;
     vector<unique_ptr<Instruction>> start = ParseScope();
     start.insert(start.begin(), make_unique<PlainASM>("\nsub    rsp, 16"));
     start.insert(start.begin(), make_unique<Assignment>(Register::bp, Register::sp));
@@ -124,24 +124,23 @@ vector<unique_ptr<Instruction>> Parser::Parse() {
     return instructions;
 }
 
-struct Scope {
-    int a;
-    unordered_map<string, shared_ptr<Address>> vars;
-};
+// struct Scope {
+//     int a;
+//     unordered_map<string, shared_ptr<Address>> vars;
+// };
 
-class Scopes : public std::stack<Scope> {
-    public:
-        Scopes() : std::stack<Scope>() {}
-        // gay
-        shared_ptr<Address> Get(string& name) {
-            if(empty())
-                throw new runtime_error("unknown");
-            if(top().vars.find(name) != top().vars.end())
-                return top().vars.at(name);
-            Scope s = top();
-            pop();
-            shared_ptr<Address> r = Get(name);
-            push(s);
-            return r;
-        }
-};
+// class Scopes : public std::stack<Scope> {
+//     public:
+//         Scopes() : std::stack<Scope>() {}
+//         shared_ptr<Address> Get(string& name) {
+//             if(empty())
+//                 throw new runtime_error("unknown");
+//             if(top().vars.find(name) != top().vars.end())
+//                 return top().vars.at(name);
+//             Scope s = top();
+//             pop();
+//             shared_ptr<Address> r = Get(name);
+//             push(s);
+//             return r;
+//         }
+// };

@@ -15,7 +15,7 @@ class RValue {
 class LValue : public RValue {
     public:
         virtual string getRef()  = 0;
-        virtual string getRef(int size)  = 0;
+        virtual string getRef(int size) = 0;
 };
 
 class Address : public LValue {
@@ -24,9 +24,9 @@ class Address : public LValue {
 
         Address(int i, int size);
 
-        string getRef()  override;
-        string getRef(int size)  override;
-        int getSize()  override;
+        string getRef() override;
+        string getRef(int size) override;
+        int getSize() override;
 };
 
 class Constant : public RValue {
@@ -35,8 +35,8 @@ class Constant : public RValue {
 
         Constant(int val, int size);
 
-        string getRef()  override;
-        int getSize()  override;
+        string getRef() override;
+        int getSize() override;
 };
 
 class Register : public LValue {
@@ -52,5 +52,5 @@ class Register : public LValue {
 
         string getRef()  override;
         string getRef(int size)  override;
-        int getSize()  override;
+        int getSize() override;
 };
