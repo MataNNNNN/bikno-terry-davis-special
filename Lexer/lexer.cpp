@@ -8,7 +8,7 @@ using std::unordered_map, std::runtime_error;
 Lexer::Lexer(ifstream& file) : file(file) {}
 
 void Lexer::Token::print()  {
-    static  char* names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "remainder", "open_paren", "close_paren", "int_type", "size_operator", "pointer", "array", "assignment", "into"};
+    static char* names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "remainder", "open_paren", "close_paren", "int_type", "size_operator", "pointer", "array", "assignment", "into"};
     std::cout << names[(int)type] << " " << value.value_or("no val") << std::endl;
 }
 
@@ -38,7 +38,7 @@ vector<Lexer::Token> Lexer::Lex() {
     vector<Token> tokens {};
     string line;
 
-    static  unordered_map<int, TokenType> symbols {
+    static unordered_map<int, TokenType> symbols {
         {'✊', TokenType::SEMICOLON},
         {'➕', TokenType::ADDITION},
         {'➖', TokenType::SUBTRACTION},
@@ -57,8 +57,6 @@ vector<Lexer::Token> Lexer::Lex() {
     while(getline(file, line)) {
         size_t last = 0, i = 0;
         while (i < line.size()) {
-            if(line[i] == 0) //remove ts💔💔
-                throw runtime_error("bad bad time should not be here ever!!!!!");
             if(line[i] == ' ') {
                 PushToken(line, tokens, i++, 1, last);
                 continue;

@@ -29,6 +29,7 @@ shared_ptr<RValue> Parser::parseInner() {
     switch (tokens[i].type) {
         case Lexer::TokenType::INT_LIT:
             t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1), 1);
+            t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1), 1);
             break;
         case Lexer::TokenType::OPEN_PAREN:
             i++;
@@ -132,6 +133,7 @@ vector<unique_ptr<Instruction>> Parser::Parse() {
 // class Scopes : public std::stack<Scope> {
 //     public:
 //         Scopes() : std::stack<Scope>() {}
+//         // gay
 //         shared_ptr<Address> Get(string& name) {
 //             if(empty())
 //                 throw new runtime_error("unknown");

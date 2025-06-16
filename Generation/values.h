@@ -7,14 +7,14 @@ using std::string, std::shared_ptr;
 
 class RValue {
     public:
-        virtual string getRef()  = 0;
-        virtual int getSize()  = 0;
+        virtual string getRef() = 0;
+        virtual int getSize() = 0;
         // virtual operator string() ;
 };
 
 class LValue : public RValue {
     public:
-        virtual string getRef()  = 0;
+        virtual string getRef() = 0;
         virtual string getRef(int size) = 0;
 };
 
