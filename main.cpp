@@ -33,8 +33,8 @@ int main(int argc, char* argv[]) {
     
     string l = oss.str();
     std::cout << l << std::endl;
-    out << l << "\nmov    rax, 60\nsyscall" << std::endl; //\nmov    rdi, 0
+    out << l << "\nleave\nmov    rax, 60\nsyscall" << std::endl; //\nmov    rdi, 0
 
-    argv[2] && system("nasm -felf64 a.out.s -o a.out.o; ld a.out.o -o a.out");
+    argv[2] && system("nasm -felf64 a.out.s -o a.out.o&& ld a.out.o -o a.out");
     return 0;
 }

@@ -8,7 +8,7 @@
 
 using std::runtime_error, std::make_shared, std::to_string, std::make_unique;
 
-int ParseInt( Lexer::Token& token) {
+int ParseInt(Lexer::Token& token) {
     if(token.type != Lexer::TokenType::INT_LIT || !token.value.has_value())
         throw runtime_error("expected integer");
     
@@ -95,8 +95,8 @@ vector<unique_ptr<Instruction>> Parser::ParseScope() {
                     throw runtime_error("adi brotfeld declaration: " + to_string(i));
                 
                 int size = ParseInt(tokens[i + 2]);
-                stack += size - stack % size;
-                variables.emplace(tokens[i += 3].value.value(), make_shared<Address>(stack, size));
+                stack += stack % size + size;
+                variables.emplace(tokens[i += 3].value.value(), make_shared<Address>(-stack, size, Register::bp));
                 break;
             }
             case Lexer::TokenType::ASSIGNMENT:

@@ -18,27 +18,6 @@ class LValue : public RValue {
         virtual string getRef(int size) = 0;
 };
 
-class Address : public LValue {
-    public:
-        int i, size;
-
-        Address(int i, int size);
-
-        string getRef() override;
-        string getRef(int size) override;
-        int getSize() override;
-};
-
-class Constant : public RValue {
-    public:
-        int val, size;
-
-        Constant(int val, int size);
-
-        string getRef() override;
-        int getSize() override;
-};
-
 class Register : public LValue {
     public:
         static  shared_ptr<Register> registers[9];
@@ -52,5 +31,27 @@ class Register : public LValue {
 
         string getRef()  override;
         string getRef(int size)  override;
+        int getSize() override;
+};
+
+class Address : public LValue {
+    public:
+        int offset, size;
+        shared_ptr<Register> reg;
+
+        Address(int offset, int size, shared_ptr<Register> reg);
+
+        string getRef() override;
+        string getRef(int size) override;
+        int getSize() override;
+};
+
+class Constant : public RValue {
+    public:
+        int val, size;
+
+        Constant(int val, int size);
+
+        string getRef() override;
         int getSize() override;
 };

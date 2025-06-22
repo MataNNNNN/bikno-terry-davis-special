@@ -4,7 +4,7 @@
 
 using std::make_shared, std::to_string;
 
-Address::Address(int i, int size): i(i), size(size) {}
+Address::Address(int offset, int size, shared_ptr<Register> reg): offset(offset), size(size), reg(reg) {}
 
 string Address::getRef()  {
     return getRef(size);
@@ -29,7 +29,7 @@ string Address::getRef(int size)  {
         default:
             throw std::runtime_error("nsdgfdfsg" + std::to_string(size));
     }
-    return n + " [rbp-" + std::to_string(i) + "]";
+    return n + " [" + reg->getRef(8) + std::to_string(offset) + "]";
 }
 int Address::getSize()  {
     return size;
@@ -87,10 +87,12 @@ Register::Register(string n8, string n16, string n32, string n64) : n8(n8), n16(
 string Register::getRef()  {
     return getRef(size);
 }
+
 string Register::getRef(int size) {
     // this->size = size;
     switch (size) {
         case 0:
+            std::cout << "Register get size 0 i dont remember when i added this or why" << std::endl;
             return getRef(size);
         case 1:
             return n8;
@@ -103,6 +105,7 @@ string Register::getRef(int size) {
     }
     throw std::runtime_error("brotrobot");
 }
+
 int Register::getSize()  {
     return size;
 }

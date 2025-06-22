@@ -8,7 +8,7 @@ using std::unordered_map, std::runtime_error;
 Lexer::Lexer(ifstream& file) : file(file) {}
 
 void Lexer::Token::print()  {
-    static char* names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "remainder", "open_paren", "close_paren", "int_type", "size_operator", "pointer", "array", "assignment", "into"};
+    static string names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "remainder", "open_paren", "close_paren", "int_type", "size_operator", "pointer", "array", "assignment", "into"};
     std::cout << names[(int)type] << " " << value.value_or("no val") << std::endl;
 }
 

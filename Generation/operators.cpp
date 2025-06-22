@@ -61,7 +61,14 @@ ostringstream& Multiplication::generate(shared_ptr<LValue> store, ostringstream&
     if(auto op = dynamic_pointer_cast<Operator>(right))
         op->generate(Register::get(getSize()), oss);
 
-    oss << "\nimul   " << t->getRef(right->getSize()) << ", " << right->getRef();
+    if(right->getSize() == t->getSize())
+        oss << "\nimul   " << t->getRef() << ", " << right->getRef();
+    else {
+        auto ninig = Register::get(t->getSize());
+        Assignment(ninig, right).generate(oss);
+        oss << "\nimul   " << t->getRef() << ", " << ninig->getRef();
+    }
+
     if(t != store)
         Assignment(store, t).generate(oss);
     return oss;
