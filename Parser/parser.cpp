@@ -29,7 +29,6 @@ shared_ptr<RValue> Parser::parseInner() {
     switch (tokens[i].type) {
         case Lexer::TokenType::INT_LIT:
             t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1), 1);
-            t = make_shared<Constant>(ParseInt(tokens[i]) * (negative ? -1 : 1), 1);
             break;
         case Lexer::TokenType::OPEN_PAREN:
             i++;

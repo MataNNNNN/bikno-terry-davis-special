@@ -2,14 +2,13 @@
 
 #include <vector>
 #include <optional>
+#include <unordered_map>
 #include <string>
 #include <fstream>
 
-using std::string, std::ifstream, std::optional, std::vector;
+using std::string, std::ifstream, std::optional, std::vector, std::unordered_map;
 
 class Lexer {
-    protected:
-        ifstream& file;
         
     public:
         Lexer(ifstream& file);
@@ -37,14 +36,19 @@ class Lexer {
         };
 
         struct Token {
+            size_t line, ch;
             TokenType type;
             optional<string> value;
 
-            void print() ;
+            void print();
             inline operator int()  {
                 return (int)type;
             }
         };
 
         vector<Token> Lex();
+
+    protected:
+        static unordered_map<int, TokenType> symbols;
+        ifstream& file;
     };

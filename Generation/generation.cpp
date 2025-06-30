@@ -16,7 +16,7 @@ ostringstream& Assignment::generate(ostringstream& oss)  {
     else if(dynamic_pointer_cast<Constant>(value))
         oss << "\nmov    " << into->getRef() << ", " << value->getRef();
     else
-        oss << "\n" << (into->getSize() == value->getSize() ? "mov    " : "movsx  ") << into->getRef() << ", " << value->getRef();
+        oss << (into->getSize() == value->getSize() ? "\nmov    " : "\nmovsx  ") << into->getRef() << ", " << value->getRef();
     return oss;
 }
 

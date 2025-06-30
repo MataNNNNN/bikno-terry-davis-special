@@ -1,9 +1,10 @@
 #include <iostream>
 #include <fstream>
+#include <format>
 
 #include "parser.h"
 
-using std::runtime_error;
+using std::runtime_error, std::format;
 
 int main(int argc, char* argv[]) {
     if(argc < 2)
@@ -23,7 +24,7 @@ int main(int argc, char* argv[]) {
 
     Parser parser(tokens);
     vector<unique_ptr<Instruction>> instruction = parser.Parse();
-    std::ofstream out("a.out.s");
+    std::ofstream out((argc >= 3) ? format("{}.s", argv[2]) : "a.out.s");
     ostringstream oss;
 
     out << "global _start\nsection .text";
@@ -35,6 +36,7 @@ int main(int argc, char* argv[]) {
     std::cout << l << std::endl;
     out << l << "\nleave\nmov    rax, 60\nsyscall" << std::endl; //\nmov    rdi, 0
 
-    argv[2] && system("nasm -felf64 a.out.s -o a.out.o&& ld a.out.o -o a.out");
+    if(argc >= 3)
+        system(format("nasm -felf64 {0}.s -o {0}.o&& ld {0}.o -o {0}", argv[2]).c_str());
     return 0;
 }

@@ -13,7 +13,7 @@ class Parser {
         unordered_map<string, shared_ptr<Address>> variables;
         int i, stack;
 
-        Parser( vector<Lexer::Token>& tokens);
+        Parser(vector<Lexer::Token>& tokens);
         vector<unique_ptr<Instruction>> Parse();
 
         vector<unique_ptr<Instruction>> ParseScope();

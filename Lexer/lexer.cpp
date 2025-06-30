@@ -1,9 +1,8 @@
 #include <iostream>
-#include <unordered_map>
 
 #include "lexer.h"
 
-using std::unordered_map, std::runtime_error;
+using std::runtime_error;
 
 Lexer::Lexer(ifstream& file) : file(file) {}
 
@@ -12,7 +11,7 @@ void Lexer::Token::print()  {
     std::cout << names[(int)type] << " " << value.value_or("no val") << std::endl;
 }
 
-void PushToken( string& line, vector<Lexer::Token>& tokens, size_t i, int count, size_t& last) {
+void PushToken(const string& line, vector<Lexer::Token>& tokens, size_t i, size_t last, size_t lineNum) {
     static  unordered_map<string, Lexer::TokenType> keywords {
         {"↩️", Lexer::TokenType::RETURN},
         {"🔢", Lexer::TokenType::INT_TYPE},
@@ -22,46 +21,46 @@ void PushToken( string& line, vector<Lexer::Token>& tokens, size_t i, int count,
     if(i > last) {
         string str = line.substr(last, i - last);
         if(str.size() > 1 && isdigit(str[0]) && str[1] < 0)
-            tokens.push_back({Lexer::TokenType::INT_LIT, str});
+            tokens.emplace_back(lineNum, last, Lexer::TokenType::INT_LIT, str);
         // else if(str.size() > 1 && str[0] > 0 && str[1] > 0) //TODO: make it goated
         //     tokens.push_back({Lexer::TokenType::STRING_LIT, str});
         else if(keywords.find(str) != keywords.end())
-            tokens.push_back({keywords.at(str)});
+            tokens.emplace_back(lineNum, last, keywords.at(str));
         else
-            tokens.push_back({Lexer::TokenType::IDENTIFIER, str});
+            tokens.emplace_back(lineNum, last, Lexer::TokenType::IDENTIFIER, str);
     } else
         std::cout << "empty string " << last << " " << i << std::endl;
-    last = i + count;
 }
+
+unordered_map<int, Lexer::TokenType> Lexer::symbols {
+    {'✊', TokenType::SEMICOLON},
+    {'➕', TokenType::ADDITION},
+    {'➖', TokenType::SUBTRACTION},
+    {'✖', TokenType::MULTIPLICATION},
+    {'➗', TokenType::DIVISION},
+    {'💯', TokenType::SIZE_OPERATOR},
+    {'☝', TokenType::POINTER},
+    {'🛄', TokenType::ARRAY},
+    {'👈', TokenType::ASSIGNMENT},
+    {'🤝', TokenType::INTO},
+    {'🫸', TokenType::OPEN_PAREN},
+    {'🫷', TokenType::CLOSE_PAREN},
+    {'🧮', TokenType::REMAINDER}
+};
 
 vector<Lexer::Token> Lexer::Lex() {
     vector<Token> tokens {};
     string line;
-
-    static unordered_map<int, TokenType> symbols {
-        {'✊', TokenType::SEMICOLON},
-        {'➕', TokenType::ADDITION},
-        {'➖', TokenType::SUBTRACTION},
-        {'✖', TokenType::MULTIPLICATION},
-        {'➗', TokenType::DIVISION},
-        {'💯', TokenType::SIZE_OPERATOR},
-        {'☝', TokenType::POINTER},
-        {'🛄', TokenType::ARRAY},
-        {'👈', TokenType::ASSIGNMENT},
-        {'🤝', TokenType::INTO},
-        {'🫸', TokenType::OPEN_PAREN},
-        {'🫷', TokenType::CLOSE_PAREN},
-        {'🧮', TokenType::REMAINDER}
-    };
+    size_t lineNum;
 
     while(getline(file, line)) {
         size_t last = 0, i = 0;
         while (i < line.size()) {
             if(line[i] == ' ') {
-                PushToken(line, tokens, i++, 1, last);
+                PushToken(line, tokens, i++, last, lineNum);
+                last = i;
                 continue;
-            }
-            if(line[i] > 0) {
+            } else if(line[i] > 0) {
                 i++;
                 continue;
             }
@@ -80,12 +79,13 @@ vector<Lexer::Token> Lexer::Lex() {
                 last = line.size();
                 break;
             } else if(symbols.find(ch) != symbols.end()) {
-                PushToken(line, tokens, i, count, last);
-                tokens.push_back({symbols.at(ch)});
+                PushToken(line, tokens, i, last, lineNum);
+                last = i + count;
+                tokens.push_back({lineNum, i, symbols.at(ch)});
             }
             i += count;
         }
-        PushToken(line, tokens, i, 0, last);
+        PushToken(line, tokens, i, last, lineNum);
     }
     return tokens;
 }
