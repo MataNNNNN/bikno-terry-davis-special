@@ -1,15 +1,20 @@
 #pragma once
 
+#include <sstream>
 #include <string>
 #include <memory>
 
-using std::string, std::shared_ptr;
+using std::string, std::shared_ptr, std::ostringstream;
+
+class LValue;
 
 class RValue {
     public:
         virtual string getRef() = 0;
         virtual int getSize() = 0;
         // virtual operator string() ;
+        virtual ostringstream& generate(shared_ptr<LValue> into, ostringstream& oss);
+        // virtual ostringstream& assign(shared_ptr<LValue> into, ostringstream& oss);
 };
 
 class LValue : public RValue {
@@ -20,9 +25,9 @@ class LValue : public RValue {
 
 class Register : public LValue {
     public:
-        static  shared_ptr<Register> registers[9];
+        static shared_ptr<Register> registers[9];
         static shared_ptr<Register> a, b, c, d, si, di, bp, sp, r8, r9, r10, r11, r12, r13, r14, r15;
-        static  shared_ptr<Register> get(int size);
+        static shared_ptr<Register> get(int size);
 
         string n8, n16, n32, n64;
         int size;
@@ -54,4 +59,5 @@ class Constant : public RValue {
 
         string getRef() override;
         int getSize() override;
+        ostringstream& generate(shared_ptr<LValue> into, ostringstream& oss) override;
 };

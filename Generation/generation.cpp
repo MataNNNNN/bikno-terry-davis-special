@@ -11,18 +11,12 @@ ostringstream& PlainASM::generate(ostringstream& oss)  {
 
 Assignment::Assignment(shared_ptr<LValue> into, shared_ptr<RValue> value): into(into), value(value) {}
 ostringstream& Assignment::generate(ostringstream& oss)  {
-    if(auto op = dynamic_pointer_cast<Operator>(value))
-        op->generate(into, oss);
-    else if(dynamic_pointer_cast<Constant>(value))
-        oss << "\nmov    " << into->getRef() << ", " << value->getRef();
-    else
-        oss << (into->getSize() == value->getSize() ? "\nmov    " : "\nmovsx  ") << into->getRef() << ", " << value->getRef();
-    return oss;
+    return value->generate(into, oss);
 }
 
 Return::Return(shared_ptr<RValue> code): code(code) {}
 ostringstream& Return::generate(ostringstream& oss)  {
-    return Assignment(Register::di, code).generate(oss); // + "\npop rbp\nret\n"; whartever
+    return code->generate(Register::di, oss);
 }
 
 Label::Label(string name, vector<unique_ptr<Instruction>> instructions) : name(name), instructions(std::move(instructions)) {}

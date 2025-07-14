@@ -4,6 +4,11 @@
 
 using std::make_shared, std::to_string;
 
+ostringstream& RValue::generate(shared_ptr<LValue> into, ostringstream& oss) {
+    oss << (into->getSize() == this->getSize() ? "\nmov    " : "\nmovsx  ") << into->getRef() << ", " << this->getRef();
+    return oss;
+}
+
 Address::Address(int offset, int size, shared_ptr<Register> reg): offset(offset), size(size), reg(reg) {}
 
 string Address::getRef()  {
@@ -11,9 +16,7 @@ string Address::getRef()  {
 }
 string Address::getRef(int size)  {
     string n;
-    switch (size) {
-        case 0:
-            return getRef(this->size);
+    switch ((size == 0) ? this->size : size) {
         case 1:
             n = "BYTE";
             break;
@@ -37,6 +40,10 @@ int Address::getSize()  {
 
 Constant::Constant(int val, int size) : val(val), size(size) {}
 
+ostringstream& Constant::generate(shared_ptr<LValue> into, ostringstream& oss) {
+    oss << "\nmov    " << into->getRef() << ", " << std::to_string(val);
+    return oss;
+}
 string Constant::getRef()  {
     return std::to_string(val);
 }

@@ -14,7 +14,5 @@ add_executable(Bikno
 )
 
 target_include_directories(Bikno PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/Lexer
-    ${CMAKE_CURRENT_SOURCE_DIR}/Parser
-    ${CMAKE_CURRENT_SOURCE_DIR}/Generation
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )

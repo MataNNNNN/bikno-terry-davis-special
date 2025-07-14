@@ -19,10 +19,7 @@ Addition::Addition(shared_ptr<RValue> left, shared_ptr<RValue> right): Operator(
 ostringstream& Addition::generate(shared_ptr<LValue> store, ostringstream& oss) {
     this->store = store;
 
-    if(auto op = dynamic_pointer_cast<Operator>(left))
-        op->generate(store, oss);
-    else if(store != left && store != right)
-        Assignment(store, left).generate(oss);
+    left->generate(store, oss);
 
     if(auto op = dynamic_pointer_cast<Operator>(right))
         op->generate(Register::get(getSize()), oss);
@@ -36,10 +33,7 @@ Subtraction::Subtraction(shared_ptr<RValue> left, shared_ptr<RValue> right): Ope
 ostringstream& Subtraction::generate(shared_ptr<LValue> store, ostringstream& oss) {
     this->store = store;
 
-    if(auto op = dynamic_pointer_cast<Operator>(left))
-        op->generate(store, oss);
-    else if(store != left)
-        Assignment(store, left).generate(oss);
+    left->generate(store, oss);
 
     if(auto op = dynamic_pointer_cast<Operator>(right))
         op->generate(Register::get(getSize()), oss);
@@ -53,10 +47,7 @@ ostringstream& Multiplication::generate(shared_ptr<LValue> store, ostringstream&
 
     shared_ptr<LValue> t = dynamic_pointer_cast<Register>(store) ? store : Register::get(getSize());
 
-    if(auto op = dynamic_pointer_cast<Operator>(left))
-        op->generate(t, oss);
-    else
-        Assignment(t, left).generate(oss);
+    left->generate(t, oss);
     
     if(auto op = dynamic_pointer_cast<Operator>(right))
         op->generate(Register::get(getSize()), oss);
@@ -65,12 +56,12 @@ ostringstream& Multiplication::generate(shared_ptr<LValue> store, ostringstream&
         oss << "\nimul   " << t->getRef() << ", " << right->getRef();
     else {
         auto ninig = Register::get(t->getSize());
-        Assignment(ninig, right).generate(oss);
+        right->generate(ninig, oss);
         oss << "\nimul   " << t->getRef() << ", " << ninig->getRef();
     }
 
     if(t != store)
-        Assignment(store, t).generate(oss);
+        t->generate(store, oss);
     return oss;
 }
 
@@ -81,19 +72,13 @@ ostringstream& Division::generate(shared_ptr<LValue> store, ostringstream& oss) 
     shared_ptr<Register> rax = Register::get(8), rdx = Register::get(8);
     oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx\nxor    rdx, rdx\nxor    rax, rax"; //replace with assignments
 
-    if(auto op = dynamic_pointer_cast<Operator>(left))
-        op->generate(Register::a, oss);
-    else
-        Assignment(Register::a, left).generate(oss);
+    left->generate(Register::a, oss);
         
     shared_ptr<Register> r = Register::get(getSize());
-    if(auto op = dynamic_pointer_cast<Operator>(right))
-        op->generate(r, oss);
-    else
-        Assignment(r, right).generate(oss);
+    right->generate(r, oss);
 
     oss << "\ndiv    " << r->getRef();
-    Assignment(Register::d, rdx).generate(oss);
+    rdx->generate(Register::d, oss);
     if(store != Register::a)
         oss << "\nmov    " << store->getRef() << ", rax\nmov    rax, " << rax->getRef();
     return oss;
@@ -106,19 +91,13 @@ ostringstream& Remainder::generate(shared_ptr<LValue> store, ostringstream& oss)
     shared_ptr<Register> rax = Register::get(8), rdx = Register::get(8);
     oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx";
 
-    if(auto op = dynamic_pointer_cast<Operator>(left))
-        op->generate(Register::a, oss);
-    else
-        Assignment(Register::a, left).generate(oss);
+    left->generate(Register::a, oss);
 
     shared_ptr<Register> r = Register::get(getSize());
-    if(auto op = dynamic_pointer_cast<Operator>(right))
-        op->generate(r, oss);
-    else
-        Assignment(r, right).generate(oss);
+    right->generate(r, oss);
 
     oss << "\ndiv    " << r->getRef();
-    Assignment(Register::a, rax).generate(oss);
+    rax->generate(Register::a, oss);
     if(store != Register::d)
         oss << "\nmov    " << store->getRef() << ", rdx\nmov    rdx, " << rdx->getRef();
     return oss;
