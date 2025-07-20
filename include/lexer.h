@@ -36,12 +36,12 @@ class Lexer {
         };
 
         struct Token {
-            size_t line, ch;
+            size_t line;
             TokenType type;
             optional<string> value;
 
             void print();
-            inline operator int()  {
+            inline operator int() {
                 return (int)type;
             }
         };

@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 
     out << "global _start\nsection .text";
     std::cout << instruction.size() << std::endl;
-    for(int i = 0; i < instruction.size(); i++)
+    for(size_t i = 0; i < instruction.size(); i++)
         instruction[i]->generate(oss) << '\n';
     
     string l = oss.str();

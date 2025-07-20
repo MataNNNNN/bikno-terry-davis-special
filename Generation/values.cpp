@@ -11,10 +11,10 @@ ostringstream& RValue::generate(shared_ptr<LValue> into, ostringstream& oss) {
 
 Address::Address(int offset, int size, shared_ptr<Register> reg): offset(offset), size(size), reg(reg) {}
 
-string Address::getRef()  {
+string Address::getRef() {
     return getRef(size);
 }
-string Address::getRef(int size)  {
+string Address::getRef(int size) {
     string n;
     switch ((size == 0) ? this->size : size) {
         case 1:
@@ -34,7 +34,7 @@ string Address::getRef(int size)  {
     }
     return n + " [" + reg->getRef(8) + std::to_string(offset) + "]";
 }
-int Address::getSize()  {
+int Address::getSize() {
     return size;
 }
 
@@ -44,10 +44,10 @@ ostringstream& Constant::generate(shared_ptr<LValue> into, ostringstream& oss) {
     oss << "\nmov    " << into->getRef() << ", " << std::to_string(val);
     return oss;
 }
-string Constant::getRef()  {
+string Constant::getRef() {
     return std::to_string(val);
 }
-int Constant::getSize()  {
+int Constant::getSize() {
     return size;
 }
 
@@ -91,7 +91,7 @@ throw std::runtime_error("no registers available deal with it"); //opopopop
 }
 
 Register::Register(string n8, string n16, string n32, string n64) : n8(n8), n16(n16), n32(n32), n64(n64), size(8) {}
-string Register::getRef()  {
+string Register::getRef() {
     return getRef(size);
 }
 
@@ -113,6 +113,6 @@ string Register::getRef(int size) {
     throw std::runtime_error("brotrobot");
 }
 
-int Register::getSize()  {
+int Register::getSize() {
     return size;
 }

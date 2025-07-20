@@ -10,7 +10,7 @@ using std::ostringstream, std::vector, std::unique_ptr;
 
 class Instruction {
     public:
-        virtual ostringstream& generate(ostringstream& oss)  = 0;
+        virtual ostringstream& generate(ostringstream& oss) = 0;
 };
 
 class PlainASM : public Instruction {
@@ -18,7 +18,7 @@ class PlainASM : public Instruction {
         string s;
         PlainASM(string s);
 
-        ostringstream& generate(ostringstream& oss)  override;
+        ostringstream& generate(ostringstream& oss) override;
 };
 
 class Assignment : public Instruction {
@@ -27,7 +27,7 @@ class Assignment : public Instruction {
         shared_ptr<RValue> value;
 
         Assignment(shared_ptr<LValue> into, shared_ptr<RValue> value);
-        ostringstream& generate(ostringstream& oss)  override;
+        ostringstream& generate(ostringstream& oss) override;
 };
 
 class Return : public Instruction {
@@ -35,7 +35,7 @@ class Return : public Instruction {
         shared_ptr<RValue> code;
 
         Return(shared_ptr<RValue> code);
-        ostringstream& generate(ostringstream& oss)  override;
+        ostringstream& generate(ostringstream& oss) override;
 };
 
 class If : public Instruction {
@@ -45,9 +45,9 @@ class If : public Instruction {
 
 class Label : public Instruction {
     public:
-        vector<unique_ptr<Instruction>> instructions;
         string name;
+        vector<unique_ptr<Instruction>> instructions;
 
         Label(string name, vector<unique_ptr<Instruction>> instructions);
-        ostringstream& generate(ostringstream& oss)  override;
+        ostringstream& generate(ostringstream& oss) override;
 };

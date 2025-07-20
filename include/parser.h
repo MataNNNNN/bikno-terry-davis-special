@@ -11,7 +11,8 @@ class Parser {
     public:
         vector<Lexer::Token>& tokens;
         unordered_map<string, shared_ptr<Address>> variables;
-        int i, stack;
+        size_t i;
+        int stack;
 
         Parser(vector<Lexer::Token>& tokens);
         vector<unique_ptr<Instruction>> Parse();

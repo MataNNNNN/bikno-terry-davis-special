@@ -98,19 +98,22 @@ vector<unique_ptr<Instruction>> Parser::ParseScope() {
                 variables.emplace(tokens[i += 3].value.value(), make_shared<Address>(-stack, size, Register::bp));
                 break;
             }
-            case Lexer::TokenType::ASSIGNMENT:
+            case Lexer::TokenType::ASSIGNMENT: {
                 if(tokens[i-1].type != Lexer::TokenType::IDENTIFIER || !tokens[i-1].value.has_value() || variables.find(tokens[i-1].value.value()) == variables.end())
                     throw runtime_error("assignment gone wrong: " + to_string(i));
 
                 auto s = variables.at(tokens[i++-1].value.value());
                 instructions.push_back(make_unique<Assignment>(s, parseExpression()));
                 break;
+            }
+            default:
+                throw runtime_error("unimplemented/unexpected at " + to_string(tokens[i].line));
         }
     }
     return instructions;
 }
 
-Parser::Parser( vector<Lexer::Token>& tokens) : tokens(tokens) {}
+Parser::Parser(vector<Lexer::Token>& tokens) : tokens(tokens) {}
 vector<unique_ptr<Instruction>> Parser::Parse() {
     vector<unique_ptr<Instruction>> instructions {};
     i = 0;

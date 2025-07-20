@@ -19,7 +19,7 @@ class RValue {
 
 class LValue : public RValue {
     public:
-        virtual string getRef() = 0;
+        virtual string getRef() = 0; // fuck off
         virtual string getRef(int size) = 0;
 };
 
@@ -34,8 +34,8 @@ class Register : public LValue {
 
         Register(string n8, string n16, string n32, string n64);
 
-        string getRef()  override;
-        string getRef(int size)  override;
+        string getRef() override;
+        string getRef(int size) override;
         int getSize() override;
 };
 
@@ -59,5 +59,12 @@ class Constant : public RValue {
 
         string getRef() override;
         int getSize() override;
+        ostringstream& generate(shared_ptr<LValue> into, ostringstream& oss) override;
+};
+
+class Pointer : public LValue {
+    public:
+        shared_ptr<Address> to;
+
         ostringstream& generate(shared_ptr<LValue> into, ostringstream& oss) override;
 };

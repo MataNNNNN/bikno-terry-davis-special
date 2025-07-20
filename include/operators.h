@@ -14,8 +14,8 @@ class Operator : public RValue {
         Operator(shared_ptr<RValue> left, shared_ptr<RValue> right);
 
         // virtual ostringstream& generate(shared_ptr<LValue> store, ostringstream& oss) = 0;
-        string getRef()  override;
-        int getSize()  override;
+        string getRef() override;
+        int getSize() override;
 };
 
 class Addition : public Operator {

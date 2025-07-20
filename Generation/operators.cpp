@@ -8,10 +8,10 @@ using std::dynamic_pointer_cast;
 
 Operator::Operator(shared_ptr<RValue> left, shared_ptr<RValue> right): left(move(left)), right(move(right)) {}
 
-string Operator::getRef()  {
+string Operator::getRef() {
     return store->getRef();
 }
-int Operator::getSize()  {
+int Operator::getSize() {
     return std::max(left->getSize(), right->getSize());
 }
 
@@ -69,8 +69,8 @@ Division::Division(shared_ptr<RValue> left, shared_ptr<RValue> right) : Operator
 ostringstream& Division::generate(shared_ptr<LValue> store, ostringstream& oss) {
     this->store = store;
 
-    shared_ptr<Register> rax = Register::get(8), rdx = Register::get(8);
-    oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx\nxor    rdx, rdx\nxor    rax, rax"; //replace with assignments
+    // shared_ptr<Register> rax = Register::get(8), rdx = Register::get(8);
+    // oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx\nxor    rdx, rdx\nxor    rax, rax"; //replace with assignments
 
     left->generate(Register::a, oss);
         
@@ -78,9 +78,11 @@ ostringstream& Division::generate(shared_ptr<LValue> store, ostringstream& oss) 
     right->generate(r, oss);
 
     oss << "\ndiv    " << r->getRef();
-    rdx->generate(Register::d, oss);
-    if(store != Register::a)
-        oss << "\nmov    " << store->getRef() << ", rax\nmov    rax, " << rax->getRef();
+    // rdx->generate(Register::d, oss);
+    store == Register::a || Register::a->generate(store, oss);
+    // if(store != Register::a)
+    //     Register::a->generate(store, oss);
+        // oss << "\nmov    " << store->getRef() << ", rax\nmov    rax, " << rax->getRef();
     return oss;
 }
 
@@ -88,8 +90,8 @@ Remainder::Remainder(shared_ptr<RValue> left, shared_ptr<RValue> right) : Operat
 ostringstream& Remainder::generate(shared_ptr<LValue> store, ostringstream& oss) {
     this->store = store;
 
-    shared_ptr<Register> rax = Register::get(8), rdx = Register::get(8);
-    oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx";
+    // shared_ptr<Register> rax = Register::get(8), rdx = Register::get(8);
+    // oss << "\nmov    " << rax->getRef() << ", rax\nmov    " << rdx->getRef() << ", rdx";
 
     left->generate(Register::a, oss);
 
@@ -97,8 +99,9 @@ ostringstream& Remainder::generate(shared_ptr<LValue> store, ostringstream& oss)
     right->generate(r, oss);
 
     oss << "\ndiv    " << r->getRef();
-    rax->generate(Register::a, oss);
-    if(store != Register::d)
-        oss << "\nmov    " << store->getRef() << ", rdx\nmov    rdx, " << rdx->getRef();
+    // rax->generate(Register::a, oss);
+    store == Register::d || Register::d->generate(store, oss);
+    // if(store != Register::d)
+    //     oss << "\nmov    " << store->getRef() << ", rdx\nmov    rdx, " << rdx->getRef();
     return oss;
 }
