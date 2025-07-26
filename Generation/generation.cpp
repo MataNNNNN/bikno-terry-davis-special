@@ -27,3 +27,8 @@ ostringstream& Label::generate(ostringstream& oss) {
         instruction->generate(oss);
     return oss;
 }
+
+If::If(shared_ptr<BooleanExpr> condition, shared_ptr<Label> body, shared_ptr<Label> elseb): condition(condition), body(body), elseb(elseb) {}
+ostringstream& If::generate(ostringstream& oss) {
+    return oss;
+}

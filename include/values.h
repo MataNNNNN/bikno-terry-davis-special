@@ -68,3 +68,8 @@ class Pointer : public LValue {
 
         ostringstream& generate(shared_ptr<LValue> into, ostringstream& oss) override;
 };
+
+class BooleanExpr {
+    public:
+        virtual ostringstream& jmp
+};

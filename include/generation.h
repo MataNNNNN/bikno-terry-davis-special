@@ -38,16 +38,20 @@ class Return : public Instruction {
         ostringstream& generate(ostringstream& oss) override;
 };
 
-class If : public Instruction {
-    public:
-        shared_ptr<RValue> condition;
-};
-
 class Label : public Instruction {
     public:
         string name;
         vector<unique_ptr<Instruction>> instructions;
 
         Label(string name, vector<unique_ptr<Instruction>> instructions);
+        ostringstream& generate(ostringstream& oss) override;
+};
+
+class If : public Instruction {
+    public:
+        shared_ptr<BooleanExpr> condition;
+        shared_ptr<Label> body, elseb;
+
+        If(shared_ptr<BooleanExpr> condition, shared_ptr<Label> body, shared_ptr<Label> elseb);
         ostringstream& generate(ostringstream& oss) override;
 };

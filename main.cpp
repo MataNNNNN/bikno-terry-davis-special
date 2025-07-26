@@ -36,7 +36,6 @@ int main(int argc, char* argv[]) {
     std::cout << l << std::endl;
     out << l << "\nleave\nmov    rax, 60\nsyscall" << std::endl; //\nmov    rdi, 0
 
-    if(argc >= 3)
-        system(format("nasm -felf64 {0}.s -o {0}.o&& ld {0}.o -o {0}", argv[2]).c_str());
+    argc >= 3 && system(format("nasm -felf64 {0}.s -o {0}.o && ld {0}.o -o {0}", argv[2]).c_str());
     return 0;
 }

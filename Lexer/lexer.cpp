@@ -7,15 +7,15 @@ using std::runtime_error;
 Lexer::Lexer(ifstream& file) : file(file) {}
 
 void Lexer::Token::print() {
-    static string names[] {"int_lit", "return", "semicolon", "identifier", "string_lit", "addition", "subtraction", "multiplication", "division", "remainder", "open_paren", "close_paren", "int_type", "size_operator", "pointer", "array", "assignment", "into"};
-    std::cout << names[(int)type] << " " << value.value_or("no val") << std::endl;
+    std::cout << (int)type << " " << value.value_or("no val") << std::endl;
 }
 
 void PushToken(const string& line, vector<Lexer::Token>& tokens, size_t i, size_t last, size_t lineNum) {
-    static unordered_map<string, Lexer::TokenType> keywords {
+    static const unordered_map<string, Lexer::TokenType> keywords {
         {"↩️", Lexer::TokenType::RETURN},
         {"🔢", Lexer::TokenType::INT_TYPE},
-        {"🔄️", Lexer::TokenType::LOOP}
+        {"🔄️", Lexer::TokenType::LOOP},
+        {"🤔", Lexer::TokenType::IF}
     };
 
     if(i > last) {
@@ -32,20 +32,23 @@ void PushToken(const string& line, vector<Lexer::Token>& tokens, size_t i, size_
         std::cout << "empty string " << last << " " << i << std::endl;
 }
 
-unordered_map<int, Lexer::TokenType> Lexer::symbols {
-    {'✊', TokenType::SEMICOLON},
-    {'➕', TokenType::ADDITION},
-    {'➖', TokenType::SUBTRACTION},
-    {'✖', TokenType::MULTIPLICATION},
-    {'➗', TokenType::DIVISION},
-    {'💯', TokenType::SIZE_OPERATOR},
-    {'☝', TokenType::POINTER},
-    {'🛄', TokenType::ARRAY},
-    {'👈', TokenType::ASSIGNMENT},
-    {'🤝', TokenType::INTO},
-    {'🫸', TokenType::OPEN_PAREN},
-    {'🫷', TokenType::CLOSE_PAREN},
-    {'🧮', TokenType::REMAINDER}
+static const unordered_map<int, Lexer::TokenType> symbols {
+    {'✊', Lexer::TokenType::SEMICOLON},
+    {'➕', Lexer::TokenType::ADDITION},
+    {'➖', Lexer::TokenType::SUBTRACTION},
+    {'✖', Lexer::TokenType::MULTIPLICATION},
+    {'➗', Lexer::TokenType::DIVISION},
+    {'💯', Lexer::TokenType::SIZE_OPERATOR},
+    {'☝', Lexer::TokenType::POINTER},
+    {'🛄', Lexer::TokenType::ARRAY},
+    {'👈', Lexer::TokenType::ASSIGNMENT},
+    {'🤝', Lexer::TokenType::INTO},
+    {'🫸', Lexer::TokenType::OPEN_PAREN},
+    {'🫷', Lexer::TokenType::CLOSE_PAREN},
+    {'🧮', Lexer::TokenType::REMAINDER},
+    {'📈', Lexer::TokenType::L},
+    {'📉', Lexer::TokenType::G},
+    {'🟰', Lexer::TokenType::EQUAL}
 };
 
 vector<Lexer::Token> Lexer::Lex() {
@@ -81,7 +84,10 @@ vector<Lexer::Token> Lexer::Lex() {
             } else if(symbols.find(ch) != symbols.end()) {
                 PushToken(line, tokens, i, last, lineNum);
                 last = i + count;
-                tokens.emplace_back(lineNum, symbols.at(ch));
+                if(ch == '🟰' && (tokens.back().type == TokenType::L || tokens.back().type == TokenType::G))
+                    tokens.back().type = tokens.back().type == TokenType::L ? TokenType::LE : TokenType::GE;
+                else
+                    tokens.emplace_back(lineNum, symbols.at(ch));
             }
             i += count;
         }

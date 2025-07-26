@@ -16,7 +16,7 @@ string Address::getRef() {
 }
 string Address::getRef(int size) {
     string n;
-    switch ((size == 0) ? this->size : size) {
+    switch (size ? size : this->size) {
         case 1:
             n = "BYTE";
             break;
@@ -82,12 +82,12 @@ shared_ptr<Register>
 };
 
 shared_ptr<Register> Register::get(int size) {
-for(auto& reg: registers)
-    if(reg.use_count() <= 2) {
-        reg->size = size;
-        return reg;
-    }
-throw std::runtime_error("no registers available deal with it"); //opopopop
+    for(auto& reg: registers)
+        if(reg.use_count() <= 2) {
+            reg->size = size;
+            return reg;
+        }
+    throw std::runtime_error("no registers available deal with it"); //opopopop
 }
 
 Register::Register(string n8, string n16, string n32, string n64) : n8(n8), n16(n16), n32(n32), n64(n64), size(8) {}
@@ -97,10 +97,7 @@ string Register::getRef() {
 
 string Register::getRef(int size) {
     // this->size = size;
-    switch (size) {
-        case 0:
-            std::cout << "Register get size 0 i dont remember when i added this or why" << std::endl;
-            return getRef(size);
+    switch (size ? size : this->size) {
         case 1:
             return n8;
         case 2:

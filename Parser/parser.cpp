@@ -8,7 +8,7 @@
 
 using std::runtime_error, std::make_shared, std::to_string, std::make_unique;
 
-int ParseInt(Lexer::Token& token) {
+int ParseInt(const Lexer::Token& token) {
     if(token.type != Lexer::TokenType::INT_LIT || !token.value.has_value())
         throw runtime_error("expected integer");
     
@@ -113,7 +113,7 @@ vector<unique_ptr<Instruction>> Parser::ParseScope() {
     return instructions;
 }
 
-Parser::Parser(vector<Lexer::Token>& tokens) : tokens(tokens) {}
+Parser::Parser(const vector<Lexer::Token>& tokens) : tokens(tokens) {}
 vector<unique_ptr<Instruction>> Parser::Parse() {
     vector<unique_ptr<Instruction>> instructions {};
     i = 0;

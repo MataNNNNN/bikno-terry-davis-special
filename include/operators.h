@@ -14,8 +14,8 @@ class Operator : public RValue {
         Operator(shared_ptr<RValue> left, shared_ptr<RValue> right);
 
         // virtual ostringstream& generate(shared_ptr<LValue> store, ostringstream& oss) = 0;
-        string getRef() override;
-        int getSize() override;
+        virtual string getRef() override;
+        virtual int getSize() override;
 };
 
 class Addition : public Operator {
@@ -51,4 +51,12 @@ class Remainder : public Operator {
         Remainder(shared_ptr<RValue> left, shared_ptr<RValue> right);
 
         ostringstream& generate(shared_ptr<LValue> store, ostringstream& oss) override;
+};
+
+class Equal : public Operator, public BooleanExpr {
+    
+};
+
+class And : public Operator, public BooleanExpr {
+
 };

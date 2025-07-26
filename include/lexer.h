@@ -32,7 +32,13 @@ class Lexer {
             ARRAY,
             ASSIGNMENT,
             INTO,
-            LOOP
+            LOOP,
+            IF,
+            G,
+            L,
+            GE,
+            LE,
+            EQUAL
         };
 
         struct Token {
@@ -49,6 +55,5 @@ class Lexer {
         vector<Token> Lex();
 
     protected:
-        static unordered_map<int, TokenType> symbols;
         ifstream& file;
-    };
+};
